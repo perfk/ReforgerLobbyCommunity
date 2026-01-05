@@ -69,15 +69,15 @@ modded class SCR_AIGroup : ChimeraAIGroup
 	// temp fix for https://feedback.bistudio.com/T196751
 	override bool SpawnDelayedGroupMember(int spawnIndex)
 	{
-		bool b = SpawnGroupMember(
+		bool done = SpawnGroupMember(
 			m_delayedSpawnList.Get(spawnIndex).snapToTerrain,
 			m_delayedSpawnList.Get(spawnIndex).index,
 			m_delayedSpawnList.Get(spawnIndex).resourceName,
 			m_delayedSpawnList.Get(spawnIndex).editMode,
 			false
 		);
-		if (spawnIndex == 0 && Event_OnInit)
+		if (done && spawnIndex == 0 && Event_OnInit)
 				Event_OnInit.Invoke(this);
-		return b;
+		return done;
 	}
 }
