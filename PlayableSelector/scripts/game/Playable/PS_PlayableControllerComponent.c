@@ -731,6 +731,9 @@ class PS_PlayableControllerComponent : ScriptComponent
 	
 	void LobbyVoNAdminEnable()
 	{
+		if(!SCR_Global.IsAdmin())
+			return;
+		
 		UpdatePosition(true);
 		GetGame().GetCallqueue().Remove(LobbyVoNDisableDelayed);
 		PS_LobbyVoNComponent von = GetVoN();
