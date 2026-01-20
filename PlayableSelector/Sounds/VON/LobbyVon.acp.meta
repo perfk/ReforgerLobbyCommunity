@@ -1,5 +1,5 @@
 MetaFileClass {
- Name "{92582B3603EE5464}Sounds/VON/vonLobby.acp"
+ Name "{BFCD9245CFE16FCC}Sounds/VON/LobbyVon.acp"
  Configurations {
   AudioProjectResourceClass PC {
   }
@@ -8,6 +8,8 @@ MetaFileClass {
   AudioProjectResourceClass XBOX_SERIES : PC {
   }
   AudioProjectResourceClass PS4 : PC {
+  }
+  AudioProjectResourceClass PS5 : PC {
   }
   AudioProjectResourceClass HEADLESS : PC {
   }

@@ -9,17 +9,13 @@ class PS_PlayableControllerComponent : ScriptComponent
 {
 	protected IEntity m_Camera;
 	protected IEntity m_InitialEntity;
-	protected vector m_vVoNPosition = PS_VoNRoomsManager.roomInitialPosition;
 	protected SCR_EGameModeState m_eMenuState = SCR_EGameModeState.PREGAME;
 	protected bool m_bAfterInitialSwitch = false;
 	protected vector m_vObserverPosition = "0 0 0";
 	protected vector lastCameraTransform[4];
+	protected vector m_lastCameraPos;
+	protected bool m_isSpectating = false;
 
-	void SetVoNPosition(vector VoNPosition)
-	{
-		m_vVoNPosition = VoNPosition;
-	}
-	
 	[RplProp()]
 	bool m_bOutFreezeTime;
 	
@@ -381,18 +377,11 @@ class PS_PlayableControllerComponent : ScriptComponent
 	// Just don't look at it.
 	override protected void OnPostInit(IEntity owner)
 	{  
-		/*
-		EntitySpawnParams params = new EntitySpawnParams(); 
-		Resource resource = Resource.Load("{6EAA30EF620F4A2E}Prefabs/Editor/Camera/ManualCameraSpectator.et");
-		m_Camera = GetGame().SpawnEntityPrefab(resource, GetGame().GetWorld(), params);
-		*/
-		
-		//SetEventMask(GetOwner(), EntityEvent.POSTFIXEDFRAME);
-		GetGame().GetCallqueue().CallLater(UpdatePosition, 0, true, false);
 		SetEventMask(GetOwner(), EntityEvent.FRAME);
 		SCR_PlayerController playerController = SCR_PlayerController.Cast(PlayerController.Cast(GetOwner()));
 		playerController.m_OnControlledEntityChanged.Insert(OnControlledEntityChanged);
-
+		UpdateCameraStart();
+		
 		PS_GameModeCoop gameModeCoop = PS_GameModeCoop.Cast(GetGame().GetGameMode());
 		if (!gameModeCoop)
 			return;
@@ -588,61 +577,11 @@ class PS_PlayableControllerComponent : ScriptComponent
 		actionManager.SetActionValue("CarLightsHiBeamToggle", 0);
 		actionManager.SetActionValue("CarHazardLights", 0);
 	}
-
-	override void EOnFixedFrame(IEntity owner, float timeSlice)
-	{
-		UpdatePosition(false);
-	}
 	
 	void UpdatePosition(bool force)
 	{
-		RplComponent rpl = RplComponent.Cast(GetOwner().FindComponent(RplComponent));
-		if (!rpl.IsOwner())
-			return;
-		
-		// Lets fight with phisyc engine
-		if (m_InitialEntity)
+		if (!m_InitialEntity)
 		{
-			PlayerController thisPlayerController = PlayerController.Cast(GetOwner());
-			int playerId = thisPlayerController.GetPlayerId();
-			m_vVoNPosition = Vector(0, 100000, 0) + Vector(1000 * Math.Mod(playerId, 10), 5000 * Math.Floor(Math.Mod(playerId, 100) / 10), 5000 * Math.Floor(playerId / 100));
-			vector currentOrigin = m_InitialEntity.GetOrigin();
-			//if (currentOrigin == m_vVoNPosition) return;
-			//Print("Move to: " + m_vVoNPosition.ToString());
-			
-			GameEntity gameEntity = GameEntity.Cast(m_InitialEntity);
-			vector mat[4];
-			Math3D.MatrixIdentity4(mat);
-			mat[3] = m_vVoNPosition;
-			if (force)
-				gameEntity.Teleport(mat);
-			gameEntity.SetTransform(mat);
-			
-			MenuBase menu = GetGame().GetMenuManager().GetTopMenu();
-			if (menu && (menu.IsInherited(PS_PreviewMapMenu) || menu.IsInherited(PS_CoopLobby) || menu.IsInherited(PS_BriefingMapMenu)))
-			{
-				GetGame().GetCameraManager().CurrentCamera().SetWorldTransform(mat);
-				if (m_Camera)
-					m_Camera.SetTransform(mat);	
-			}
-
-			// Who broke camera on map?
-			CameraBase cameraBase = GetGame().GetCameraManager().CurrentCamera();
-			if (cameraBase)
-				cameraBase.ApplyTransform(GetGame().GetWorld().GetTimeSlice());
- 
-
-			Physics physics = m_InitialEntity.GetPhysics();
-			if (physics)
-			{
-				//physics.SetVelocity("0 0 0");
-				//physics.SetAngularVelocity("0 0 0");
-				//physics.SetMass(0);
-				//physics.SetDamping(1, 1);
-				//physics.ChangeSimulationState(SimulationState.NONE);
-				physics.SetActive(ActiveState.INACTIVE);
-			}
-		} else {
 			PlayerController thisPlayerController = PlayerController.Cast(GetOwner());
 			IEntity entity = thisPlayerController.GetControlledEntity();
 			if (entity)
@@ -666,8 +605,11 @@ class PS_PlayableControllerComponent : ScriptComponent
 
 	void ChangeFactionKey(int playerId, FactionKey factionKey)
 	{
+		MoveToFactionVoNRoomByKey(playerId, factionKey);
+		
 		Rpc(RPC_ChangeFactionKey, playerId, factionKey)
 	}
+	
 	[RplRpc(RplChannel.Reliable, RplRcver.Server)]
 	void RPC_ChangeFactionKey(int playerId, FactionKey factionKey)
 	{
@@ -692,6 +634,39 @@ class PS_PlayableControllerComponent : ScriptComponent
 	}
 
 	// ------------------ VoN controlls ------------------
+	BaseTransceiver GetTransceiver(EChannelType channel)
+	{
+		PlayerController pc = PlayerController.Cast(GetOwner());
+		IEntity intial = GetInitialEntity();
+		if(!intial)
+			return null;
+
+		SCR_GadgetManagerComponent gadget = SCR_GadgetManagerComponent.Cast(intial.FindComponent(SCR_GadgetManagerComponent));
+		if(!gadget)
+			return null;
+		
+		IEntity radioEntity = gadget.GetGadgetByType(EGadgetType.RADIO);
+		if(!radioEntity)
+			return null;
+
+		BaseRadioComponent radio = BaseRadioComponent.Cast(radioEntity.FindComponent(BaseRadioComponent));
+		if(!radio)
+			return null;
+		
+		Print("GRAY | GetTransceiver: " + radio.GetTransceiver(channel));
+		return radio.GetTransceiver(channel);
+	}
+	
+	void MoveToFactionVoNRoomByKey(int playerId, FactionKey factionKey)
+	{
+		FactionManager fm = GetGame().GetFactionManager();
+		int factionIndex = fm.GetFactionIndex(fm.GetFactionByKey(factionKey));
+		BaseTransceiver transceiver = GetTransceiver(EChannelType.SECONDARY);
+
+		transceiver.SetFrequency(factionIndex + 1000);
+		PrintFormat("GRAY | SetFrequency SECONDARY: %1 - transceiver: %2",(factionIndex + 1000), transceiver);
+	}
+	
 	void MoveToVoNRoomByKey(int playerId, string roomKey)
 	{
 		string factionKey = "";
@@ -726,37 +701,44 @@ class PS_PlayableControllerComponent : ScriptComponent
 		PS_LobbyVoNComponent von = PS_LobbyVoNComponent.Cast(entity.FindComponent(PS_LobbyVoNComponent));
 		return von;
 	}
-	RadioTransceiver GetVoNTransiver(int radioId)
-	{
-		PlayerController thisPlayerController = PlayerController.Cast(GetOwner());
-		IEntity entity = thisPlayerController.GetControlledEntity();
-		SCR_GadgetManagerComponent gadgetManager = SCR_GadgetManagerComponent.Cast(entity.FindComponent(SCR_GadgetManagerComponent));
-		array<SCR_GadgetComponent> radios = gadgetManager.GetGadgetsByType(EGadgetType.RADIO);
-		IEntity radioEntity = radios[radioId].GetOwner();
-		BaseRadioComponent radio = BaseRadioComponent.Cast(radioEntity.FindComponent(BaseRadioComponent));
-		radio.SetPower(true);
-		RadioTransceiver transiver = RadioTransceiver.Cast(radio.GetTransceiver(0));
-		transiver.SetFrequency(radioId + 1);
-		return transiver;
-	}
+	
 	void LobbyVoNEnable()
 	{
 		UpdatePosition(true);
 		GetGame().GetCallqueue().Remove(LobbyVoNDisableDelayed);
 		PS_LobbyVoNComponent von = GetVoN();
-		von.SetTransmitRadio(GetVoNTransiver(1));
+		BaseTransceiver transceiver = GetTransceiver(EChannelType.PRIMARY);
+		von.SetTransmitRadio(transceiver);
 		von.SetCommMethod(ECommMethod.SQUAD_RADIO);
 		von.SetCapture(true);
+		
+		PrintFormat("GRAY | SPEAK FREQ: %1 - Trans: %2" + transceiver.GetFrequency(), transceiver);
+		
 	}
-	void LobbyVoNRadioEnable()
+	
+	void LobbyVoNFactionEnable()
 	{
 		UpdatePosition(true);
 		GetGame().GetCallqueue().Remove(LobbyVoNDisableDelayed);
 		PS_LobbyVoNComponent von = GetVoN();
-		von.SetTransmitRadio(GetVoNTransiver(0));
+		BaseTransceiver transceiver = GetTransceiver(EChannelType.SECONDARY);
+		von.SetTransmitRadio(transceiver);
+		von.SetCommMethod(ECommMethod.SQUAD_RADIO);
+		von.SetCapture(true);
+		
+		PrintFormat("GRAY | FACTION SPEAK FREQ: %1 - Trans: %2", transceiver.GetFrequency(), transceiver);
+	}
+	
+	void LobbyVoNAdminEnable()
+	{
+		UpdatePosition(true);
+		GetGame().GetCallqueue().Remove(LobbyVoNDisableDelayed);
+		PS_LobbyVoNComponent von = GetVoN();
+		von.SetTransmitRadio(GetTransceiver(EChannelType.ADMIN));
 		von.SetCommMethod(ECommMethod.SQUAD_RADIO);
 		von.SetCapture(true);
 	}
+	
 	void LobbyVoNDisable()
 	{
 		// Delay VoN disable
@@ -770,25 +752,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 		von.SetCommMethod(ECommMethod.DIRECT);
 		von.SetCapture(false);
 	}
-	// Separate radio VoNs, CALL IT FROM SERVER
-	void SetVoNKey(string VoNKey, string VoNKeyLocal)
-	{
-		if (!GetVoN())
-			return;
-		PlayerController thisPlayerController = PlayerController.Cast(GetOwner());
-		IEntity entity = thisPlayerController.GetControlledEntity();
-		if (!entity)
-			return;
-		SCR_GadgetManagerComponent gadgetManager = SCR_GadgetManagerComponent.Cast(entity.FindComponent(SCR_GadgetManagerComponent));
-		array<SCR_GadgetComponent> radios = gadgetManager.GetGadgetsByType(EGadgetType.RADIO);
-		if (radios.Count() > 0)
-		{
-			BaseRadioComponent radio = BaseRadioComponent.Cast(radios[0].GetOwner().FindComponent(BaseRadioComponent));
-			radio.SetEncryptionKey(VoNKey);
-			radio = BaseRadioComponent.Cast(radios[1].GetOwner().FindComponent(BaseRadioComponent));
-			radio.SetEncryptionKey(VoNKeyLocal);
-		}
-	}
+	
 	bool isVonInit()
 	{
 		PlayerController thisPlayerController = PlayerController.Cast(GetOwner());
@@ -815,6 +779,43 @@ class PS_PlayableControllerComponent : ScriptComponent
 	}
 
 	// ------------------ Observer camera controlls ------------------
+	bool IsSpectating()
+	{
+		return m_isSpectating;
+	}
+	
+	void UpdateCameraStart()
+	{
+		BaseWorld world = GetGame().GetWorld();
+		int cameraID = world.GetCurrentCameraId();
+		vector mat[4];
+		world.GetCamera(cameraID, mat);
+		world.SetCamera(cameraID, Vector(0,5000,0), Vector(0,0,0));
+		
+		PrintFormat("GRAY | UpdateCameraStart");
+	}
+
+	void UpdateCamera()
+	{
+		if(!m_Camera)
+			return;
+
+		BaseGameEntity gameEntity = BaseGameEntity.Cast(GetInitialEntity());
+		if(!gameEntity)
+			return;
+
+		vector mat[4];
+		m_Camera.GetTransform(mat);
+
+		if(mat[3] == m_lastCameraPos)
+			return;
+
+		m_lastCameraPos = mat[3];
+
+		gameEntity.Teleport(mat);
+		PrintFormat("GRAY | Camera: %1", mat[3]);
+	}
+	
 	void SaveCameraTransform()
 	{
 		SCR_CameraEditorComponent cameraManager = SCR_CameraEditorComponent.Cast(SCR_BaseEditorComponent.GetInstance(SCR_CameraEditorComponent, false));
@@ -855,6 +856,8 @@ class PS_PlayableControllerComponent : ScriptComponent
 		PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
 		if (gameMode.GetFriendliesSpectatorOnly())
 			PS_ManualCameraSpectator.Cast(m_Camera).SetCharacterEntityMove(from);
+		
+		m_isSpectating = true;
 	}
 
 	void SwitchFromObserver()
@@ -864,6 +867,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 		GetGame().GetMenuManager().CloseMenuByPreset(ChimeraMenuPreset.SpectatorMenu);
 		SCR_EntityHelper.DeleteEntityAndChildren(m_Camera);
 		m_Camera = null;
+		m_isSpectating = false;
 	}
 
 	// Force change game state

@@ -15,11 +15,14 @@ SCR_ChimeraCharacter : "{37578B1666981FCE}Prefabs/Characters/Core/Character_Base
        Prefab "{8F49616A4BAAF407}Prefabs/MenuRadio2.et"
       }
       SCR_EquipmentStorageSlot MapSlot {
-       Prefab "{922F95F91943F69A}Prefabs/Items/Equipment/Maps/PaperMap_01_folded_US.et"
+       Prefab "{922F95F91943F69A}Prefabs/Items/Equipment/Maps/Map_Paper_01/PaperMap_01_folded_US.et"
       }
      }
     }
    }
+  }
+  APS_LobbyVoNComponent "{6868240D3F748131}" {
+   Filename "{BDE86953C7A1A084}Sounds/VON/FirstLobbyVon.acp"
   }
   ChimeraAIControlComponent "{520EA1D2DB109F34}" {
    Enabled 0
@@ -71,7 +74,7 @@ SCR_ChimeraCharacter : "{37578B1666981FCE}Prefabs/Characters/Core/Character_Base
    ReceiveLight 0
   }
   PS_LobbyVoNComponent "{618B054CFFD60A4C}" {
-   Filename "{92582B3603EE5464}Sounds/VON/vonLobby.acp"
+   Filename "{BFCD9245CFE16FCC}Sounds/VON/LobbyVon.acp"
   }
   PS_PlayableComponent "{5EFCC1946F475F15}" {
    Enabled 0

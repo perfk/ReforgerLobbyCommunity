@@ -66,6 +66,7 @@ class PS_VoiceButton : PS_HideableButton
 		
 		m_LobbyVoNComponent.GetOnReceiveStart().Insert(OnReceiveStart);
 		m_LobbyVoNComponent.GetOnReceiveEnd().Insert(OnReceiveEnd);
+
 		
 		GetGame().GetCallqueue().Remove(LateVoNInit);
 		UpdateState();
