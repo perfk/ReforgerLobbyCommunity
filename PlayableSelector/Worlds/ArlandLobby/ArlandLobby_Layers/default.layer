@@ -34,6 +34,8 @@ PS_GameModeCoop PS_GameMode_Lobby1 : "{9C2001FE7A2F2281}Prefabs/MP/Modes/PS_Game
    }
   }
  }
+ m_bTeamSwitch 1
+ m_iFreezeTime 5
  m_bFreezeTimeShootingForbiden 1
 }
 $grp SCR_AIGroup : "{107554618BE6FF20}Prefabs/Groups/BLUFOR/Group_US_Team_Suppress_P.et" {
@@ -63,6 +65,10 @@ Turret : "{66B35D82EB9B4E28}Prefabs/Weapons/Tripods/6T7/Deployable_Tripod_6T7_NS
 }
 SCR_AIGroup : "{704B4E4EC7C56B55}Prefabs/Groups/BLUFOR/Group_US_AmmoTeam_P.et" {
  coords 1615.499 41.336 2271.03
+}
+SCR_AIGroup : "{80E0FC9E8DB2F531}Prefabs/Groups/OPFOR/Group_USSR_AmmoTeam_P.et" {
+ coords 1377.548 47.83 2369.623
+ m_bSetPlayable 1
 }
 $grp Vehicle : "{C012BB3488BEA0C2}Prefabs/Vehicles/Wheeled/BTR70/BTR70.et" {
  BTR1 {

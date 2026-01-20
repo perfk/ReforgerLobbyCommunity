@@ -605,8 +605,13 @@ class PS_PlayableControllerComponent : ScriptComponent
 	void ChangeFactionKey(int playerId, FactionKey factionKey)
 	{
 		MoveToFactionVoNRoomByKey(playerId, factionKey);
+	
+		Rpc(RPC_ChangeFactionKey, playerId, factionKey);
 		
-		Rpc(RPC_ChangeFactionKey, playerId, factionKey)
+		SCR_FactionManager factionManager = SCR_FactionManager.Cast(GetGame().GetFactionManager());
+		SCR_Faction faction = SCR_Faction.Cast(factionManager.GetFactionByKey(factionKey));
+		if(faction)
+			SetMap(faction.GetMapPrefab());
 	}
 	
 	[RplRpc(RplChannel.Reliable, RplRcver.Server)]
@@ -970,14 +975,15 @@ class PS_PlayableControllerComponent : ScriptComponent
 	// -------------------- Set ---------------------
 	void SetMap(ResourceName mapPrefab)
 	{
-		if (!m_InitialEntity)
+		IEntity player = GetGame().GetPlayerController().GetControlledEntity();
+		if (!player)
 			return;
 		
-		SCR_InventoryStorageManagerComponent inventory = SCR_InventoryStorageManagerComponent.Cast(m_InitialEntity.FindComponent(SCR_InventoryStorageManagerComponent));
+		SCR_InventoryStorageManagerComponent inventory = SCR_InventoryStorageManagerComponent.Cast(player.FindComponent(SCR_InventoryStorageManagerComponent));
 		if (!inventory)
 			return;
 
-		SCR_EquipmentStorageComponent equipment = SCR_EquipmentStorageComponent.Cast(m_InitialEntity.FindComponent(SCR_EquipmentStorageComponent));
+		SCR_EquipmentStorageComponent equipment = SCR_EquipmentStorageComponent.Cast(player.FindComponent(SCR_EquipmentStorageComponent));
 		if (!equipment)
 			return;
 		
@@ -995,21 +1001,14 @@ class PS_PlayableControllerComponent : ScriptComponent
 			break;
 		}
 		
-		if(slotId != -1)
-		{
-			IEntity mapEntity = equipment.Get(slotId);
-			inventory.TryDeleteItem(mapEntity);
-		}
-		else
-		{
-			slotId = 2;
-		}
-
-		//InventoryItemComponent item = slot.GetOwner();
-		//mapPrefab
-	
-		inventory.TrySpawnPrefabToStorage(mapPrefab, equipment, slotId);
-		Print("GRAY | TrySpawnPrefabToStorage");
+		if(slotId == -1)
+			return;
+		
+		IEntity mapEntity = equipment.Get(slotId);
+		
+		SCR_MapGadgetComponent gadget = SCR_MapGadgetComponent.Cast(mapEntity.FindComponent(SCR_MapGadgetComponent));
+		
+		gadget.SetRuler(mapPrefab);
 	}
 	
 	void SetPlayerState(int playerId, PS_EPlayableControllerState state)
