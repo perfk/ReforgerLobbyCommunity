@@ -12,7 +12,6 @@ class PS_PlayableControllerComponent : ScriptComponent
 	protected SCR_EGameModeState m_eMenuState = SCR_EGameModeState.PREGAME;
 	protected bool m_bAfterInitialSwitch = false;
 	protected vector m_vObserverPosition = "0 0 0";
-	protected vector lastCameraTransform[4];
 	protected vector m_lastCameraPos;
 	protected bool m_isSpectating = false;
 
