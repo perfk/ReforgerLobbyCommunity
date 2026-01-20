@@ -242,7 +242,9 @@ class PS_AlivePlayerSelector : SCR_ButtonBaseComponent
 	// -------------------- Buttons events --------------------
 	void AlivePlayerButtonClicked(SCR_ButtonBaseComponent playerButton)
 	{
-		m_mSpectatorMenu.SetCameraCharacter(m_PlayableContainer.GetRplId());
+		RplId rpldId = m_PlayableContainer.GetRplId();
+		PS_PlayableControllerComponent.GetInstance().AskSetCameraPosition(rpldId);
+		//m_mSpectatorMenu.SetCameraCharacter(rpldId);
 	}
 	
 }

@@ -853,9 +853,6 @@ class PS_PlayableControllerComponent : ScriptComponent
 		if (gameMode.GetFriendliesSpectatorOnly())
 			PS_ManualCameraSpectator.Cast(m_Camera).SetCharacterEntityMove(from);
 		
-		SCR_ScreenEffectsManager effects = SCR_ScreenEffectsManager.GetScreenEffectsDisplay();
-		effects.ManagerClearEffects();
-		
 		m_isSpectating = true;
 	}
 
@@ -1095,5 +1092,34 @@ class PS_PlayableControllerComponent : ScriptComponent
 		PS_Objective objective = PS_Objective.Cast(Replication.FindItem(objectiveId));
 		if (objective)
 			objective.SetCompleted(complete);
+	}
+	
+	void AskSetCameraPosition(RplId rplId)
+	{
+		Rpc(RPC_AskSetCameraPosition, rplId);
+	}
+	
+	[RplRpc(RplChannel.Reliable, RplRcver.Server)]
+	void RPC_AskSetCameraPosition(RplId rplId)
+	{
+		RplComponent rplComponent = RplComponent.Cast(Replication.FindItem(rplId));
+		if (!rplComponent)
+			return;
+		
+		SCR_ChimeraCharacter chimera = SCR_ChimeraCharacter.Cast(rplComponent.GetEntity());
+		
+		Rpc(RPC_SetCameraPosition, chimera.EyePosition());
+	}
+	
+	[RplRpc(RplChannel.Reliable, RplRcver.Owner)]
+	void RPC_SetCameraPosition(vector position)
+	{
+		m_Camera.SetOrigin(position);
+	}
+	
+	static PS_PlayableControllerComponent GetInstance()
+	{
+		PlayerController pc = GetGame().GetPlayerController();
+		return PS_PlayableControllerComponent.Cast(pc.FindComponent(PS_PlayableControllerComponent));
 	}
 }
