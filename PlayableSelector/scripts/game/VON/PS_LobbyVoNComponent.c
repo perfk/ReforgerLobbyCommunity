@@ -75,7 +75,6 @@ class PS_LobbyVoNComponent : VoNComponent
 		SCR_VoNComponent vonComp = SCR_VoNComponent.Cast(pc.FindComponent(PS_LobbyVoNComponent));
 		
 		vonContr.SetVONComponent(vonComp);
-		Print("GRAY | SetVonActive: " + vonComp);
 	}
 	
 	

@@ -245,7 +245,6 @@ class PS_GameModeCoop : SCR_BaseGameMode
 		PlayerController playerController = GetGame().GetPlayerController();
 		PS_PlayableControllerComponent playableController = PS_PlayableControllerComponent.Cast(playerController.FindComponent(PS_PlayableControllerComponent));
 
-		playableController.SaveCameraTransform();
 		playableController.SwitchFromObserver();
 		
 		IEntity entity = playerController.GetControlledEntity();

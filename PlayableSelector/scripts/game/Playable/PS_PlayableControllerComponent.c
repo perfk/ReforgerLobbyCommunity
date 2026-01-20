@@ -652,8 +652,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 		BaseRadioComponent radio = BaseRadioComponent.Cast(radioEntity.FindComponent(BaseRadioComponent));
 		if(!radio)
 			return null;
-		
-		Print("GRAY | GetTransceiver: " + radio.GetTransceiver(channel));
+
 		return radio.GetTransceiver(channel);
 	}
 	
@@ -664,7 +663,6 @@ class PS_PlayableControllerComponent : ScriptComponent
 		BaseTransceiver transceiver = GetTransceiver(EChannelType.SECONDARY);
 
 		transceiver.SetFrequency(factionIndex + 1000);
-		PrintFormat("GRAY | SetFrequency SECONDARY: %1 - transceiver: %2",(factionIndex + 1000), transceiver);
 	}
 	
 	void MoveToVoNRoomByKey(int playerId, string roomKey)
@@ -711,9 +709,6 @@ class PS_PlayableControllerComponent : ScriptComponent
 		von.SetTransmitRadio(transceiver);
 		von.SetCommMethod(ECommMethod.SQUAD_RADIO);
 		von.SetCapture(true);
-		
-		PrintFormat("GRAY | SPEAK FREQ: %1 - Trans: %2" + transceiver.GetFrequency(), transceiver);
-		
 	}
 	
 	void LobbyVoNFactionEnable()
@@ -725,8 +720,6 @@ class PS_PlayableControllerComponent : ScriptComponent
 		von.SetTransmitRadio(transceiver);
 		von.SetCommMethod(ECommMethod.SQUAD_RADIO);
 		von.SetCapture(true);
-		
-		PrintFormat("GRAY | FACTION SPEAK FREQ: %1 - Trans: %2", transceiver.GetFrequency(), transceiver);
 	}
 	
 	void LobbyVoNAdminEnable()
@@ -794,10 +787,8 @@ class PS_PlayableControllerComponent : ScriptComponent
 		vector mat[4];
 		world.GetCamera(cameraID, mat);
 		world.SetCamera(cameraID, Vector(0,5000,0), Vector(0,0,0));
-		
-		PrintFormat("GRAY | UpdateCameraStart");
 	}
-
+	
 	void UpdateCamera()
 	{
 		if(!m_Camera)
@@ -816,13 +807,6 @@ class PS_PlayableControllerComponent : ScriptComponent
 		m_lastCameraPos = mat[3];
 
 		gameEntity.Teleport(mat);
-		PrintFormat("GRAY | Camera: %1", mat[3]);
-	}
-	
-	void SaveCameraTransform()
-	{
-		SCR_CameraEditorComponent cameraManager = SCR_CameraEditorComponent.Cast(SCR_BaseEditorComponent.GetInstance(SCR_CameraEditorComponent, false));
-		cameraManager.GetLastCameraTransform(lastCameraTransform);
 	}
 
 	void SwitchToObserver(IEntity from)
@@ -843,17 +827,27 @@ class PS_PlayableControllerComponent : ScriptComponent
 		Resource resource = Resource.Load("{6EAA30EF620F4A2E}Prefabs/Editor/Camera/ManualCameraSpectator.et");
 		m_Camera = GetGame().SpawnEntityPrefab(resource, GetGame().GetWorld(), params);
 
-		if (lastCameraTransform[3][1] < 10000 && lastCameraTransform[3][1] > 0)
+		if (from)
 		{
-			m_Camera.SetTransform(lastCameraTransform);
-			lastCameraTransform[3][1] = 10000;
-		} else if (m_vObserverPosition != "0 0 0") {
-			m_Camera.SetOrigin(m_vObserverPosition);
-			m_vObserverPosition = "0 0 0";
-		} else {
+			SCR_ChimeraCharacter cc = SCR_ChimeraCharacter.Cast(from);
+			if(cc)
+			{
+				vector transform[4];
+				cc.GetTransform(transform);
+				
+				transform[0] = vector.Zero;
+				transform[1] = vector.Zero;
+				transform[3] = cc.EyePosition();
+				
+				m_Camera.SetTransform(transform);
+			}
+		}
+		else
+		{
 			SCR_MapEntity mapEntity = SCR_MapEntity.GetMapInstance();
 			m_Camera.SetOrigin(mapEntity.Size() / 2.0 + vector.Up * 100);
 		}
+		
 		GetGame().GetCameraManager().SetCamera(CameraBase.Cast(m_Camera));
 
 		PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
