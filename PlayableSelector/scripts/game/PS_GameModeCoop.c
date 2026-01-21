@@ -128,6 +128,8 @@ class PS_GameModeCoop : SCR_BaseGameMode
         }
         World world = GetGame().GetWorld();
         world.FindSystem(SCR_GarbageSystem).Enable(!m_bDisableGarbageSystem);
+		
+		SetTimeAdvancing(false);
     }
 	
 	override void OnGameStart()
@@ -883,7 +885,9 @@ class PS_GameModeCoop : SCR_BaseGameMode
 			return;
 
 		SCR_EGameModeState state = GetState();
-		if (oldState != SCR_EGameModeState.NULL && oldState != state) return;
+		if (oldState != SCR_EGameModeState.NULL && oldState != state)
+			return;
+		
 		switch (state)
 		{
 			case SCR_EGameModeState.PREGAME:
@@ -925,6 +929,7 @@ class PS_GameModeCoop : SCR_BaseGameMode
 			ReserveSlots();
 		PS_PlayableManager.GetInstance().RemoveRedundantUnits();
 		restrictedZonesTimer(m_iFreezeTime);
+		SetTimeAdvancing(true);
 		StartGameMode();
 	}
 
@@ -1072,6 +1077,20 @@ class PS_GameModeCoop : SCR_BaseGameMode
 		return m_bDisableBuildingModeAfterFreezeTime;
 	}
 
+	void SetTimeAdvancing(bool isAdvancing)
+	{
+		ChimeraWorld world = ChimeraWorld.CastFrom(GetGame().GetWorld());
+		if (!world)
+			return;
+		
+		TimeAndWeatherManagerEntity timeManager = world.GetTimeAndWeatherManager();
+		if (!timeManager)
+			return;
+		
+		timeManager.SetIsDayAutoAdvanced(isAdvancing);
+		Print("GRAY | TIME: " + isAdvancing);
+	}
+	
 	bool GetMarkersOnlyOnBriefing()
 	{
 		return m_bMarkersOnlyOnBriefing;
