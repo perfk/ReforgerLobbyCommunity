@@ -1088,7 +1088,6 @@ class PS_GameModeCoop : SCR_BaseGameMode
 			return;
 		
 		timeManager.SetIsDayAutoAdvanced(isAdvancing);
-		Print("GRAY | TIME: " + isAdvancing);
 	}
 	
 	bool GetMarkersOnlyOnBriefing()
