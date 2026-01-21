@@ -189,6 +189,9 @@ class PS_GameModeCoop : SCR_BaseGameMode
 			video.Set("MaxFps", m_iForceMenuFramerate);
 			GetGame().GetCallqueue().CallLater(ForceFramerate, 1000, true);
 		}
+		
+		if(GetState() != SCR_EGameModeState.GAME)
+			AudioSystem.SetMasterVolume(AudioSystem.SFX, 0);
 	}
 	void ForceFramerate()
 	{
@@ -874,6 +877,9 @@ class PS_GameModeCoop : SCR_BaseGameMode
 				}
 				if (m_bHolsterWeapon)
 					playableManager.HolsterWeapons();
+				break;
+			case SCR_EGameModeState.GAME:
+				AudioSystem.SetMasterVolume(AudioSystem.SFX, 1);
 				break;
 		}
 	}
