@@ -379,7 +379,6 @@ class PS_PlayableControllerComponent : ScriptComponent
 		SetEventMask(GetOwner(), EntityEvent.FRAME);
 		SCR_PlayerController playerController = SCR_PlayerController.Cast(PlayerController.Cast(GetOwner()));
 		playerController.m_OnControlledEntityChanged.Insert(OnControlledEntityChanged);
-		UpdateCameraStart();
 		
 		PS_GameModeCoop gameModeCoop = PS_GameModeCoop.Cast(GetGame().GetGameMode());
 		if (!gameModeCoop)
@@ -783,16 +782,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 	{
 		return m_isSpectating;
 	}
-	
-	void UpdateCameraStart()
-	{
-		BaseWorld world = GetGame().GetWorld();
-		int cameraID = world.GetCurrentCameraId();
-		vector mat[4];
-		world.GetCamera(cameraID, mat);
-		world.SetCamera(cameraID, Vector(0,5000,0), Vector(0,0,0));
-	}
-	
+
 	void UpdateCamera()
 	{
 		if(!m_Camera)

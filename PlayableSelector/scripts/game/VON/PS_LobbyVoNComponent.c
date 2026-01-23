@@ -11,8 +11,24 @@ class APS_LobbyVoNComponentClass : VoNComponentClass
 
 //------------------------------------------------------------------------------------------------
 class APS_LobbyVoNComponent : VoNComponent 
-{}
-
+{
+	override protected event void OnReceive(int playerId, bool isSenderEditor, BaseTransceiver receiver, int frequency, float quality)
+	{
+		PlayerController pc = GetGame().GetPlayerController();
+		if (!pc)
+			return;
+		
+		IEntity player = pc.GetControlledEntity();
+		if (!player)
+			return;
+		
+		PS_LobbyVoNComponent vonComp = PS_LobbyVoNComponent.Cast(player.FindComponent(PS_LobbyVoNComponent));
+		if (!vonComp)
+			return;
+		
+		vonComp.OnReceiveHandle(playerId, receiver, frequency, quality);
+	}
+}
 
 //------------------------------------------------------------------------------------------------
 class PS_LobbyVoNComponentClass : VoNComponentClass
@@ -118,7 +134,7 @@ class PS_LobbyVoNComponent : VoNComponent
 		OnReceiveHandle(playerId, receiver, frequency, quality);
 	}
 	
-	protected void OnReceiveHandle(int playerId, BaseTransceiver receiver, int frequency, float quality)
+	void OnReceiveHandle(int playerId, BaseTransceiver receiver, int frequency, float quality)
 	{
 		if (!IsPlayerSpeech(playerId))
 		{
@@ -150,4 +166,4 @@ class PS_LobbyVoNComponent : VoNComponent
 		
 		m_ScriptInvokerOnReceiveEnd.Invoke(playerId);
 	}
-};
+}
