@@ -665,8 +665,8 @@ class PS_PlayableControllerComponent : ScriptComponent
 		FactionManager fm = GetGame().GetFactionManager();
 		int factionIndex = fm.GetFactionIndex(fm.GetFactionByKey(factionKey));
 		BaseTransceiver transceiver = GetTransceiver(EChannelType.SECONDARY);
-
-		transceiver.SetFrequency(factionIndex + 1000);
+		if (transceiver)
+			transceiver.SetFrequency(factionIndex + 1000);
 	}
 	
 	void MoveToVoNRoomByKey(int playerId, string roomKey)
