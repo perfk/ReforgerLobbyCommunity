@@ -1071,6 +1071,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 	{
 		Rpc(RPC_SetPlayerPlayable, playerId, playableId);
 	}
+	
 	[RplRpc(RplChannel.Reliable, RplRcver.Server)]
 	protected void RPC_SetPlayerPlayable(int playerId, RplId playableId)
 	{
@@ -1147,6 +1148,22 @@ class PS_PlayableControllerComponent : ScriptComponent
 			return;
 		
 		playerGroupController.RequestJoinGroup(newGroup.GetGroupID());
+	}
+	
+	void SetIntialPosition(vector transform[4])
+	{
+		Rpc(RPC_SetIntialPosition, transform);
+	}
+	
+	[RplRpc(RplChannel.Reliable, RplRcver.Owner)]
+	void RPC_SetIntialPosition(vector transform[4])
+	{
+		PlayerController pc = PlayerController.Cast(GetOwner());
+		GameEntity intial = GameEntity.Cast(pc.GetControlledEntity());
+		if (!intial)
+			return;
+		
+		intial.Teleport(transform);
 	}
 	
 	void AskSetCameraPosition(RplId rplId)

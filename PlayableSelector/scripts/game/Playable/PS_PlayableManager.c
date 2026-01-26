@@ -839,7 +839,29 @@ class PS_PlayableManager : ScriptComponent
 	{
 		RPC_SetPlayerPlayable(playerId, playableId);
 		Rpc(RPC_SetPlayerPlayable, playerId, playableId);
+		
+		PlayerController pc = GetGame().GetPlayerManager().GetPlayerController(playerId);
+		if (!pc)
+			return;
+		
+		RplComponent rplComp = RplComponent.Cast(Replication.FindItem(playableId));
+		if (!rplComp)
+			return;
+		
+		IEntity slot = rplComp.GetEntity();
+		if (!slot)
+			return;
+
+		vector transform[4];
+		slot.GetTransform(transform);
+		
+		PS_PlayableControllerComponent playable = PS_PlayableControllerComponent.Cast(pc.FindComponent(PS_PlayableControllerComponent));
+		if (!playable)
+			return;
+
+		playable.SetIntialPosition(transform);
 	}
+	
 	[RplRpc(RplChannel.Reliable, RplRcver.Broadcast)]
 	protected void RPC_SetPlayerPlayable(int playerId, RplId playableId)
 	{
