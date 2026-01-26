@@ -737,7 +737,7 @@ class PS_GameModeCoop : SCR_BaseGameMode
 		Resource resource = Resource.Load("{ADDE38E4119816AB}Prefabs/InitialPlayer_Version2.et");
 		EntitySpawnParams params = new EntitySpawnParams();
 		GetTransform(params.Transform);
-		vector position = Vector(0, 5000 + playerId, 0);
+		vector position = Vector(0, 5000, playerId * 100);
 		params.Transform[3] = position;
 		IEntity initialEntity = GetGame().SpawnEntityPrefab(resource, GetGame().GetWorld(), params);
 		PlayerManager playerManager = GetGame().GetPlayerManager();

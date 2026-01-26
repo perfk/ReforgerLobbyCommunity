@@ -106,6 +106,9 @@ SCR_ChimeraCharacter : "{37578B1666981FCE}Prefabs/Characters/Core/Character_Base
     }
    }
   }
+  RHS_ThermalSlotManagerComponent "{60D6F4C7C990A7BB}" {
+   Enabled 0
+  }
   CharacterAnimationComponent "{520EA1D2F659C994}" {
    AnimInstance "{B086D0CD3B9E3AB0}anims/workspaces/player/player_PS_VON.asi"
   }
