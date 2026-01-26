@@ -842,6 +842,8 @@ class PS_PlayableControllerComponent : ScriptComponent
 			m_Camera.SetOrigin(mapEntity.Size() / 2.0 + vector.Up * 100);
 		}
 		
+		Rpc(RPC_AskRemoveFromGroup);
+		
 		GetGame().GetCameraManager().SetCamera(CameraBase.Cast(m_Camera));
 
 		PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
@@ -1125,6 +1127,26 @@ class PS_PlayableControllerComponent : ScriptComponent
 		PS_Objective objective = PS_Objective.Cast(Replication.FindItem(objectiveId));
 		if (objective)
 			objective.SetCompleted(complete);
+	}
+	
+	[RplRpc(RplChannel.Reliable, RplRcver.Server)]
+	void RPC_AskRemoveFromGroup()
+	{
+		SCR_GroupsManagerComponent groupManager = SCR_GroupsManagerComponent.GetInstance();
+		if (!groupManager)
+			return;
+	
+		PlayerController pc = PlayerController.Cast(GetOwner());
+		if(!pc)
+			return;
+		
+		SCR_PlayerControllerGroupComponent playerGroupController = SCR_PlayerControllerGroupComponent.GetPlayerControllerComponent(pc.GetPlayerId());
+
+		SCR_AIGroup newGroup = groupManager.CreateNewPlayableGroup(null);
+		if (!newGroup)
+			return;
+		
+		playerGroupController.RequestJoinGroup(newGroup.GetGroupID());
 	}
 	
 	void AskSetCameraPosition(RplId rplId)
