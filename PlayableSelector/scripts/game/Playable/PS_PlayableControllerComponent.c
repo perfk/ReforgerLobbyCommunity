@@ -9,6 +9,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 {
 	protected IEntity m_Camera;
 	protected IEntity m_InitialEntity;
+	protected RplId m_InitialRplId;
 	protected SCR_EGameModeState m_eMenuState = SCR_EGameModeState.PREGAME;
 	protected bool m_bAfterInitialSwitch = false;
 	protected vector m_vObserverPosition = "0 0 0";
@@ -594,11 +595,33 @@ class PS_PlayableControllerComponent : ScriptComponent
 	// Save VoN boi for reuse
 	IEntity GetInitialEntity()
 	{
+		if (!m_InitialEntity && m_InitialRplId)
+		{
+			RplComponent rpl = RplComponent.Cast(Replication.FindItem(m_InitialRplId));
+			if (!rpl)
+				return null;
+			
+			return rpl.GetEntity();
+		}
+		
 		return m_InitialEntity;
+		
 	}
 	void SetInitialEntity(IEntity initialEntity)
 	{
 		m_InitialEntity = initialEntity;
+		
+		RplComponent rpl = RplComponent.Cast(initialEntity.FindComponent(RplComponent));
+		if(!rpl)
+			return;
+		
+		Rpc(RPC_SetIntialEntity, rpl.Id());
+	}
+	
+	[RplRpc(RplChannel.Reliable, RplRcver.Owner)]
+	void RPC_SetIntialEntity(RplId rplID)
+	{
+		m_InitialRplId = rplID;
 	}
 
 	void ChangeFactionKey(int playerId, FactionKey factionKey)
@@ -1158,12 +1181,15 @@ class PS_PlayableControllerComponent : ScriptComponent
 	[RplRpc(RplChannel.Reliable, RplRcver.Owner)]
 	void RPC_SetIntialPosition(vector transform[4])
 	{
-		PlayerController pc = PlayerController.Cast(GetOwner());
-		GameEntity intial = GameEntity.Cast(pc.GetControlledEntity());
-		if (!intial)
+		IEntity initial = GetInitialEntity();
+		if (!initial)
 			return;
 		
-		intial.Teleport(transform);
+		GameEntity gameEntity = GameEntity.Cast(GetInitialEntity());
+		if (!gameEntity)
+			return;
+		
+		gameEntity.Teleport(transform);
 	}
 	
 	void AskSetCameraPosition(RplId rplId)
