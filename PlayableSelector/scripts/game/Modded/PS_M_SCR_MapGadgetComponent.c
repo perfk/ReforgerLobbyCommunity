@@ -22,7 +22,29 @@ modded class SCR_MapGadgetComponent
 		if(!container)
 			return;
 
-		container.Get("m_sProtractorTexture", m_sProtractorTexture);
-		container.Get("m_fRulerLength", m_fRulerLength);
+		ResourceName protractorTexture;
+		float rulerLength;
+		container.Get("m_sProtractorTexture", protractorTexture);
+		container.Get("m_fRulerLength", rulerLength);
+		
+		SCR_MapGadgetComponentClass data = SCR_MapGadgetComponentClass.Cast(GetComponentData(GetOwner()));
+		if (!data)
+			return;
+		
+		data.SetProtractorTexture(protractorTexture);
+		data.SetRulerLength(rulerLength);
+	}
+}
+
+modded class SCR_MapGadgetComponentClass
+{
+	void SetProtractorTexture(ResourceName texture)
+	{
+		m_sProtractorTexture = texture;
+	}
+	
+	void SetRulerLength(float length)
+	{
+		m_fRulerLength = length;
 	}
 }
