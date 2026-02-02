@@ -1,32 +1,69 @@
 modded class SCR_ChatPanel : ScriptedWidgetComponent
 {
+	protected const int CHAT_ACTIVE_MS = 120000;
+
+	protected int m_iLastSentTick = 0;
+
 	override protected void UpdateChatMessages()
 	{
-		PlayerManager playerManager = GetGame().GetPlayerManager();
-		PlayerController playerController = GetGame().GetPlayerController();
-		EPlayerRole playerRole = playerManager.GetPlayerRoles(playerController.GetPlayerId());
-		PS_PlayableManager playableManager = PS_PlayableManager.GetInstance();
-		if (!playableManager)
-			return super.UpdateChatMessages();
-		FactionKey factionKey = playableManager.GetPlayerFactionKey(playerController.GetPlayerId());
-		PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
-		if (!gameMode.IsChatDisabled() || gameMode.GetState() == SCR_EGameModeState.SLOTSELECTION || gameMode.GetState() == SCR_EGameModeState.BRIEFING || factionKey == "" || PS_PlayersHelper.IsAdminOrServer())
+		if (ShouldShowChat())
 			super.UpdateChatMessages();
 		else
-		{
-			array<ref SCR_ChatMessage> messages = SCR_ChatPanelManager().GetInstance().GetMessages();
-	
-			for (int i = 0; i < m_iMessageLineCount; i++)
-			{
-				if (i > m_aMessageLines.Count() - 1 || i < 0)
-					continue;
+			HideAllMessageLines();
+	}
 
-				SCR_ChatMessageLineComponent lineComp = m_aMessageLines[i];
-				lineComp.SetVisible(false);
-			}
+	override protected void SendMessage()
+	{
+		super.SendMessage();
+		m_iLastSentTick = System.GetTickCount();
+	}
+
+	protected bool ShouldShowChat()
+	{
+		PS_PlayableManager playableManager = PS_PlayableManager.GetInstance();
+		if (!playableManager)
+			return true;
+
+		PlayerController playerController = GetGame().GetPlayerController();
+		if (!playerController)
+			return true;
+
+		PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		if (!gameMode)
+			return true;
+
+		if (!gameMode.IsChatDisabled())
+			return true;
+
+		if (gameMode.GetState() != SCR_EGameModeState.GAME)
+			return true;
+
+		int playerId = playerController.GetPlayerId();
+
+		FactionKey factionKey = playableManager.GetPlayerFactionKey(playerId);
+		if (factionKey == "")
+			return true;
+
+		if (PS_PlayersHelper.IsAdminOrServer())
+			return true;
+
+		if (System.GetTickCount() - m_iLastSentTick < CHAT_ACTIVE_MS)
+			return true;
+
+		return false;
+	}
+
+	protected void HideAllMessageLines()
+	{
+		foreach (SCR_ChatMessageLineComponent lineComp : m_aMessageLines)
+		{
+			if (!lineComp)
+				continue;
+
+			lineComp.SetVisible(false);
 		}
 	}
-	
+
 	SCR_ChatPanelWidgets PS_GetWidgets()
 	{
 		return m_Widgets;
