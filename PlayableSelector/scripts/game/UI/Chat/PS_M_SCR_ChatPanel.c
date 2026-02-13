@@ -2,7 +2,7 @@ modded class SCR_ChatPanel : ScriptedWidgetComponent
 {
 	protected const int CHAT_ACTIVE_MS = 120000;
 
-	protected int m_iLastSentTick = 0;
+	protected int m_iLastSentTick = -120000;
 
 	override protected void UpdateChatMessages()
 	{

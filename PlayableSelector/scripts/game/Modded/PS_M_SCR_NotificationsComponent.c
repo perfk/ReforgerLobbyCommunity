@@ -9,7 +9,7 @@ modded class SCR_NotificationsComponent
 			super.ReceiveSCR_NotificationData(id, data);
 			return;
 		}
-		if (!gameMode.IsChatDisabled())
+		if (!gameMode.IsNotificationsDisabled())
 		{
 			super.ReceiveSCR_NotificationData(id, data);
 			return;

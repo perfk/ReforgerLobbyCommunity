@@ -43,6 +43,9 @@ class PS_GameModeCoop : SCR_BaseGameMode
 
 	[Attribute("0", UIWidgets.CheckBox, "Disables text chat for alive players on game stage. Admins can always see text chat.", category: "Reforger Lobby")]
 	protected bool m_bDisableChat;
+	
+	[Attribute("0", UIWidgets.CheckBox, "Disables notifications chat for alive players on game stage. Admins can always see text chat.", category: "Reforger Lobby")]
+	protected bool m_bDisableNotifications;
 
 	[RplProp()]
 	protected float m_fCurrentFreezeTime = 1;
@@ -1066,6 +1069,11 @@ class PS_GameModeCoop : SCR_BaseGameMode
 	bool IsChatDisabled()
 	{
 		return m_bDisableChat;
+	}
+	
+	bool IsNotificationsDisabled()
+	{
+		return m_bDisableNotifications;
 	}
 
 	bool IsFactionLockMode()
