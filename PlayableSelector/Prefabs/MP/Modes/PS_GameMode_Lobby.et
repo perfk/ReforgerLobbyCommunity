@@ -65,7 +65,7 @@ PS_GameModeCoop : "{0F307326459A1395}Prefabs/MP/Modes/GameMode_Base.et" {
    m_bDisableControls 0
   }
   SCR_RespawnSystemComponent "{56B2B4793051E7C9}" {
-   Enabled 1
+   Enabled 0
   }
   SCR_RestoreEditorModesComponent "{61B68227D500DBF7}" {
   }
