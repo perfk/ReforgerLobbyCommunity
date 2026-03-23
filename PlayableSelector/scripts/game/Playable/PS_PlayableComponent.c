@@ -220,6 +220,18 @@ class PS_PlayableComponent : ScriptComponent
 		}
 		m_PlayableManager.OnPlayableDamageStateChanged(m_RplId, state);
 	}
+	
+	override protected void OnDelete(IEntity owner)
+	{
+		SwitchToInitialEntity(m_PlayableManager.GetPlayerByPlayable(m_RplId));
+		super.OnDelete(owner);
+	}
+	
+	private void SwitchToInitialEntity(int playerId)
+	{
+		if (m_GameModeCoop)
+			m_GameModeCoop.SwitchToInitialEntity(playerId);
+	}
 
 	private void TryRespawn(int playerId)
 	{
