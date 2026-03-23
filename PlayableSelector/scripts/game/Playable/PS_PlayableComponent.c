@@ -223,7 +223,8 @@ class PS_PlayableComponent : ScriptComponent
 	
 	override protected void OnDelete(IEntity owner)
 	{
-		SwitchToInitialEntity(m_PlayableManager.GetPlayerByPlayable(m_RplId));
+		if (m_PlayableManager)
+			SwitchToInitialEntity(m_PlayableManager.GetPlayerByPlayable(m_RplId));
 		super.OnDelete(owner);
 	}
 	
