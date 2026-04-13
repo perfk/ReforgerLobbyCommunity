@@ -456,7 +456,7 @@ class PS_CharacterSelector : SCR_ButtonComponent
 		if (!PS_PlayersHelper.IsAdminOrServer())
 		{
 			RplId playableId = m_PlayableManager.GetPlayableByPlayer(m_iCurrentPlayerId);
-			if (gameState == SCR_EGameModeState.BRIEFING && playableId != RplId.Invalid())
+			if (!m_GameModeCoop.GetCanOpenLobbyInGame() && gameState == SCR_EGameModeState.BRIEFING && playableId != RplId.Invalid())
 			{
 				m_CoopLobby.SetPreviewPlayable(m_iPlayableId, true);
 				return;
@@ -475,13 +475,19 @@ class PS_CharacterSelector : SCR_ButtonComponent
 			}
 			
 			SCR_UISoundEntity.SoundEvent("SOUND_HUD_GADGET_SELECT");
-			m_PlayableControllerComponent.MoveToVoNRoom(playerId, m_sFactionKey, m_sPlayableCallsign);
+			if (gameState == SCR_EGameModeState.BRIEFING)
+			{
+				if (!m_GameModeCoop.m_bPublicCommandBriefing)
+					m_PlayableControllerComponent.MoveToVoNRoom(playerId, m_sFactionKey, m_sPlayableCallsign);
+				else
+					m_PlayableControllerComponent.MoveToVoNRoom(playerId, m_sFactionKey, "#PS-VoNRoom_Command");
+			}
+			
 			m_PlayableControllerComponent.ChangeFactionKey(playerId, m_sFactionKey);
 			m_PlayableControllerComponent.SetPlayerState(playerId, PS_EPlayableControllerState.NotReady);	
 			m_PlayableControllerComponent.SetPlayerPlayable(playerId, m_iPlayableId);
 		} else {
 			SCR_UISoundEntity.SoundEvent("SOUND_HUD_GADGET_SELECT");
-			m_PlayableControllerComponent.MoveToVoNRoom(playerId, m_sFactionKey, "#PS-VoNRoom_Faction");
 			m_PlayableControllerComponent.ChangeFactionKey(playerId, "");
 			m_PlayableControllerComponent.SetPlayerState(playerId, PS_EPlayableControllerState.NotReady);
 			m_PlayableControllerComponent.SetPlayerPlayable(playerId, RplId.Invalid());
