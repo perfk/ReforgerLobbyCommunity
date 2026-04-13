@@ -52,6 +52,7 @@ class PS_CoopLobby : MenuBase
 	protected VerticalLayoutWidget m_wPlayersList;
 	protected ButtonWidget m_wPreviewHideButton;
 	protected TextWidget m_wPlayersCounter;
+	protected TextWidget m_wRatioCounter;
 	protected FrameWidget m_wVoiceChatFrame;
 	protected OverlayWidget m_wLobbyLittleInventoryItemInfo;
 	protected ButtonWidget m_wPlayersSwitch;
@@ -126,6 +127,7 @@ class PS_CoopLobby : MenuBase
 		m_wPlayersSearchBox = OverlayWidget.Cast(m_wRoot.FindAnyWidget("PlayersSearchBox"));
 		m_wPreviewHideButton = ButtonWidget.Cast(m_wRoot.FindAnyWidget("PreviewHideButton"));
 		m_wPlayersCounter = TextWidget.Cast(m_wRoot.FindAnyWidget("PlayersCounter"));
+		m_wRatioCounter = TextWidget.Cast(m_wRoot.FindAnyWidget("RatioCounter"));
 		m_wVoiceChatFrame = FrameWidget.Cast(m_wRoot.FindAnyWidget("VoiceChatFrame"));
 		m_wLobbyLittleInventoryItemInfo = OverlayWidget.Cast(m_wRoot.FindAnyWidget("LobbyLittleInventoryItemInfo"));
 		m_wPlayersSwitch = ButtonWidget.Cast(m_wRoot.FindAnyWidget("PlayersSwitch"));
@@ -235,6 +237,7 @@ class PS_CoopLobby : MenuBase
 	{
 		InitPlayables();
 		InitPlayers();
+		SetRatio();
 		
 		m_wPlayersCounter.SetTextFormat("%1/%2", m_PlayerManager.GetPlayerCount(), m_PlayableManager.GetMaxPlayers());
 	}
@@ -535,11 +538,13 @@ class PS_CoopLobby : MenuBase
 	void OnPlayerConnected(int playerId)
 	{
 		m_wPlayersCounter.SetTextFormat("%1/%2", m_PlayerManager.GetPlayerCount(), m_PlayableManager.GetMaxPlayers());
+		SetRatio();
 	}
 	
 	void OnPlayerDisconnected(int playerId)
 	{
 		m_wPlayersCounter.SetTextFormat("%1/%2", m_PlayerManager.GetPlayerCount(), m_PlayableManager.GetMaxPlayers());
+		SetRatio();
 	}
 	
 	void OnStartTimerCounterChanged(int timer)
@@ -636,9 +641,64 @@ class PS_CoopLobby : MenuBase
 	{
 		ArmaReforgerScripted.OpenPauseMenu();
 	}
+	
+	protected void SetRatio()
+	{
+		int totalPlayers = m_PlayerManager.GetPlayerCount();
+		array<int> playersPerRatio = {};
+	
+		if (m_mFactions.Count() < 2)
+		{
+			TextWidget ratioHeader = TextWidget.Cast(m_wRoot.FindAnyWidget("RatioHeader"));
+			ratioHeader.SetVisible(false);
+			return;
+		}
+		
+		int totalSlots = 0;
+		foreach (SCR_Faction faction, PS_FactionSelector selector : m_mFactions)
+		{
+			totalSlots += selector.GetMaxCount();
+		}
+		
+		array<float> ratios = {};
+		foreach (SCR_Faction faction, PS_FactionSelector selector : m_mFactions)
+		{
+			float ratio = selector.GetMaxCount() / totalSlots;
+			ratios.Insert(ratio);
+		}
+
+		int remainingPlayers = totalPlayers;
+		for (int i = 0; i < ratios.Count(); i++)
+		{
+			int playersForThisRatio = Math.Round(ratios[i] * totalPlayers);
+			playersPerRatio.Insert(playersForThisRatio);
+			
+			remainingPlayers -= playersForThisRatio;
+		}
+		
+		if (remainingPlayers > 0)
+		{
+			int maxIndex = 0;
+			for (int i = 1; i < playersPerRatio.Count(); i++)
+			{
+				if (ratios[i] > ratios[maxIndex])
+					maxIndex = i;
+			}
+			playersPerRatio[maxIndex] = playersPerRatio[maxIndex] + remainingPlayers;
+		}
+		
+		string formattedRatio = "";
+		for (int i = 0; i < playersPerRatio.Count(); i++)
+		{
+			formattedRatio += playersPerRatio[i].ToString();
+
+			if (i < playersPerRatio.Count() - 1)
+				formattedRatio += " : ";
+		}
+		
+		m_wRatioCounter.SetText(formattedRatio);
+	}
 }
-
-
 
 
 
