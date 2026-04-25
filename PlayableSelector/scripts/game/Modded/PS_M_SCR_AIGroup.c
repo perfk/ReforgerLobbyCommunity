@@ -6,9 +6,6 @@ modded class SCR_AIGroup : ChimeraAIGroup
 	[Attribute("", UIWidgets.CheckBox, "Set all characters playable", category: "Reforger Lobby")]
 	bool m_bSetPlayable;
 	
-	[Attribute("", UIWidgets.Auto, "", category: "Reforger Lobby")]
-	vector m_vRespawnPosition;
-	
 	override void EOnInit(IEntity owner)
 	{
 		// WHY ther's no way to set it in group directly without this stupid injection?

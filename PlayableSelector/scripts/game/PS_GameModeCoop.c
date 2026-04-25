@@ -780,7 +780,7 @@ class PS_GameModeCoop : SCR_BaseGameMode
 				if (playerId > 0)
 					playableComponent.OpenRespawnMenu(time);
 
-				PS_RespawnData respawnData = new PS_RespawnData(playableComponent, prefabToSpawn);
+				PS_RespawnData respawnData = new PS_RespawnData(playableComponent, prefabToSpawn, factionRespawns.m_sPosition);
 				GetGame().GetCallqueue().CallLater(Respawn, time, false, playerId, respawnData);
 				return;
 			}
@@ -1245,12 +1245,14 @@ class PS_GameModeCoop : SCR_BaseGameMode
 [BaseContainerProps()]
 class PS_FactionRespawnCount
 {
-	[Attribute()]
+	[Attribute("")]
 	FactionKey m_sFactionKey;
-	[Attribute()]
+	[Attribute("0", desc:"How many respawn tickets the faction has available")]
 	int m_iCount;
-	[Attribute()]
+	[Attribute("0", desc:"After how many seconds player respawns, until then there is a blackscreen")]
 	int m_iTime;
-	[Attribute()]
+	[Attribute("0", desc:"If enabled, players will respawn together every few seconds, the time attribute determines the interval")]
 	bool m_bWaveMode;
+	[Attribute("", desc:"Optional name of entity at which all faction players respawn. If not set, players respawn in their original position.")]
+	string m_sPosition;
 }

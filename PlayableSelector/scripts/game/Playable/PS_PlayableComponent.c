@@ -397,14 +397,25 @@ class PS_RespawnData
 	int m_iRespawnCounter;
 	ref array<ResourceName> m_aRespawnPrefabs;
 
-	void PS_RespawnData(PS_PlayableComponent playableComponent, ResourceName prefabName)
+	void PS_RespawnData(PS_PlayableComponent playableComponent, ResourceName prefabName, string respawnPos)
 	{
 		m_PlayableComponent = playableComponent;
 
 		m_sPrefabName = prefabName;
 		m_Id = playableComponent.GetRplId();
-		playableComponent.GetSpawnTransform(m_aSpawnTransform);
+		
 		m_iRespawnCounter = playableComponent.m_iRespawnCounter;
 		m_aRespawnPrefabs = playableComponent.m_aRespawnPrefabs;
+		
+		if (respawnPos != "")
+		{
+			IEntity e = GetGame().GetWorld().FindEntityByName(respawnPos);
+			if (e)
+			{
+				e.GetTransform(m_aSpawnTransform);
+				return;
+			}
+		}
+		playableComponent.GetSpawnTransform(m_aSpawnTransform);
 	}
 }
