@@ -834,6 +834,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 		
 		if (m_Camera)
 			return;
+		
 		GetGame().GetMenuManager().OpenMenu(ChimeraMenuPreset.SpectatorMenu);
 		PlayerController thisPlayerController = PlayerController.Cast(GetOwner());
 		IEntity entity = thisPlayerController.GetControlledEntity();
@@ -853,8 +854,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 				transform[0] = vector.Zero;
 				transform[1] = vector.Zero;
 				transform[3] = cc.EyePosition();
-				//transform[3][1] = transform[3][1] + 5;
-				
+
 				params.Transform = transform;
 			}
 		}
@@ -866,10 +866,9 @@ class PS_PlayableControllerComponent : ScriptComponent
 		
 		Resource resource = Resource.Load("{6EAA30EF620F4A2E}Prefabs/Editor/Camera/ManualCameraSpectator.et");
 		m_Camera = GetGame().SpawnEntityPrefab(resource, GetGame().GetWorld(), params);
+		GetGame().GetCameraManager().SetCamera(CameraBase.Cast(m_Camera));
 		
 		Rpc(RPC_AskRemoveFromGroup);
-		
-		GetGame().GetCameraManager().SetCamera(CameraBase.Cast(m_Camera));
 
 		PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
 		if (gameMode.GetFriendliesSpectatorOnly())
