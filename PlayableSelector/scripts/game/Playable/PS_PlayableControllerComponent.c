@@ -838,11 +838,9 @@ class PS_PlayableControllerComponent : ScriptComponent
 		PlayerController thisPlayerController = PlayerController.Cast(GetOwner());
 		IEntity entity = thisPlayerController.GetControlledEntity();
 		EntitySpawnParams params = new EntitySpawnParams();
-		if (from)
-			from.GetTransform(params.Transform);
+		params.Transform[3] = "0 1000 0";
+		
 		MoveToVoNRoom(thisPlayerController.GetPlayerId(), "", "");
-		Resource resource = Resource.Load("{6EAA30EF620F4A2E}Prefabs/Editor/Camera/ManualCameraSpectator.et");
-		m_Camera = GetGame().SpawnEntityPrefab(resource, GetGame().GetWorld(), params);
 
 		if (from)
 		{
@@ -855,15 +853,19 @@ class PS_PlayableControllerComponent : ScriptComponent
 				transform[0] = vector.Zero;
 				transform[1] = vector.Zero;
 				transform[3] = cc.EyePosition();
+				//transform[3][1] = transform[3][1] + 5;
 				
-				m_Camera.SetTransform(transform);
+				params.Transform = transform;
 			}
 		}
 		else
 		{
 			SCR_MapEntity mapEntity = SCR_MapEntity.GetMapInstance();
-			m_Camera.SetOrigin(mapEntity.Size() / 2.0 + vector.Up * 100);
+			params.Transform[3] = mapEntity.Size() / 2.0 + vector.Up * 100;
 		}
+		
+		Resource resource = Resource.Load("{6EAA30EF620F4A2E}Prefabs/Editor/Camera/ManualCameraSpectator.et");
+		m_Camera = GetGame().SpawnEntityPrefab(resource, GetGame().GetWorld(), params);
 		
 		Rpc(RPC_AskRemoveFromGroup);
 		
