@@ -46,6 +46,12 @@ class PS_GameModeCoop : SCR_BaseGameMode
 	
 	[Attribute("0", UIWidgets.CheckBox, "Disables notifications chat for alive players on game stage. Admins can always see text chat.", category: "Reforger Lobby")]
 	protected bool m_bDisableNotifications;
+	
+	[Attribute("0", UIWidgets.CheckBox, "Locks all slots are lobby start.", category: "Reforger Lobby")]
+	protected bool m_bStartAllSlotsLocked;
+	
+	[Attribute("0", UIWidgets.CheckBox, "Forces ratio to be kept when selecting slots", category: "Reforger Lobby")]
+	protected bool m_bEnforceRatio;
 
 	[RplProp()]
 	protected float m_fCurrentFreezeTime = 1;
@@ -85,9 +91,6 @@ class PS_GameModeCoop : SCR_BaseGameMode
 	[Attribute("0", UIWidgets.CheckBox, "", category: "Reforger Lobby")]
 	protected bool m_bDisableBuildingModeAfterFreezeTime;
 	
-	[Attribute("-1", UIWidgets.Auto, "", category: "Reforger Lobby (WIP)")]
-	protected int m_iFactionsBalance;
-
 	[Attribute("0", UIWidgets.CheckBox, "", category: "Reforger Lobby (WIP)")]
 	protected bool m_bShowCutscene;
 
@@ -131,6 +134,9 @@ class PS_GameModeCoop : SCR_BaseGameMode
         }
         World world = GetGame().GetWorld();
         world.FindSystem(SCR_GarbageSystem).Enable(!m_bDisableGarbageSystem);
+		
+		if(m_bEnforceRatio)
+			ToggleRatio();
 		
 		SetTimeAdvancing(false);
     }
@@ -647,52 +653,161 @@ class PS_GameModeCoop : SCR_BaseGameMode
 			}
 		}
 	}
-
+	
+	bool GetTargetRatioPerFaction(out map<FactionKey, int> targetRatioPerFaction)
+	{
+		targetRatioPerFaction = new map<FactionKey, int>();
+	
+		PlayerManager playerManager = GetGame().GetPlayerManager();
+		if (!playerManager)
+			return false;
+	
+		if (!m_playableManager)
+			return false;
+	
+		array<PS_PlayableContainer> playables = m_playableManager.GetPlayablesSorted();
+	
+		if (!playables || playables.IsEmpty())
+			return false;
+	
+		map<FactionKey, int> maxSlotsPerFaction = new map<FactionKey, int>();
+		array<FactionKey> factionOrder = {};
+	
+		int totalSlots = 0;
+	
+		foreach (PS_PlayableContainer playable : playables)
+		{
+			if (!playable)
+				continue;
+	
+			SCR_Faction faction = playable.GetFaction();
+			if (!faction)
+				continue;
+	
+			FactionKey factionKey = faction.GetFactionKey();
+	
+			totalSlots++;
+	
+			if (!maxSlotsPerFaction.Contains(factionKey))
+			{
+				maxSlotsPerFaction.Insert(factionKey, 1);
+				factionOrder.Insert(factionKey);
+				continue;
+			}
+	
+			int currentMax = maxSlotsPerFaction.Get(factionKey);
+			maxSlotsPerFaction.Set(factionKey, currentMax + 1);
+		}
+	
+		if (factionOrder.Count() < 2)
+			return false;
+	
+		if (totalSlots <= 0)
+			return false;
+	
+		int totalPlayers = playerManager.GetPlayerCount();
+	
+		array<float> ratios = {};
+		int remainingPlayers = totalPlayers;
+	
+		for (int i = 0; i < factionOrder.Count(); i++)
+		{
+			FactionKey factionKey = factionOrder[i];
+			int factionMaxSlots = maxSlotsPerFaction.Get(factionKey);
+	
+			float ratio = factionMaxSlots / (float)totalSlots;
+			ratios.Insert(ratio);
+	
+			int targetPlayers = Math.Round(ratio * totalPlayers);
+	
+			targetRatioPerFaction.Insert(factionKey, targetPlayers);
+			remainingPlayers -= targetPlayers;
+		}
+	
+		if (remainingPlayers > 0)
+		{
+			int maxIndex = 0;
+	
+			for (int i = 1; i < ratios.Count(); i++)
+			{
+				if (ratios[i] > ratios[maxIndex])
+					maxIndex = i;
+			}
+	
+			FactionKey largestFactionKey = factionOrder[maxIndex];
+			int currentTarget = targetRatioPerFaction.Get(largestFactionKey);
+	
+			targetRatioPerFaction.Set(largestFactionKey, currentTarget + remainingPlayers);
+		}
+	
+		for (int i = 0; i < factionOrder.Count(); i++)
+		{
+			FactionKey factionKey = factionOrder[i];
+			int factionMaxSlots = maxSlotsPerFaction.Get(factionKey);
+			float ratio = ratios[i];
+			int targetCount = targetRatioPerFaction.Get(factionKey);
+		}
+	
+		return true;
+	}
+	
+	protected int GetCurrentPlayerCountForFaction(FactionKey factionKey)
+	{
+		PlayerManager playerManager = GetGame().GetPlayerManager();
+		if (!playerManager)
+			return 0;
+	
+		array<PS_PlayableContainer> playables = m_playableManager.GetPlayablesSorted();
+	
+		if (!playables)
+			return 0;
+	
+		int count = 0;
+	
+		foreach (PS_PlayableContainer playable : playables)
+		{
+			if (!playable)
+				continue;
+	
+			SCR_Faction faction = playable.GetFaction();
+			if (!faction)
+				continue;
+	
+			if (faction.GetFactionKey() != factionKey)
+				continue;
+	
+			int playerId = m_playableManager.GetPlayerByPlayable(playable.GetRplId());
+	
+			if (playerId >= 0)
+				count++;
+		}
+	
+		return count;
+	}
+	
 	bool CanJoinFaction(FactionKey factionKeyPlayer, FactionKey currentFaction)
 	{
-		if (m_iFactionsBalance == -1)
+		if(!IsEnforceRatioEnabled())
 			return true;
+		
 		if (factionKeyPlayer == currentFaction)
 			return true;
 
-		map<FactionKey, int> players = new map<FactionKey, int>();
-		map<FactionKey, int> playables = new map<FactionKey, int>();
-		array<PS_PlayableContainer> playableComponents = m_playableManager.GetPlayablesSorted();
-		foreach (PS_PlayableContainer playable : playableComponents)
-		{
-			FactionKey factionKey = playable.GetFactionKey();
-
-			if (!players.Contains(factionKey))
-				players[factionKey] = 0;
-			if (!playables.Contains(factionKey))
-				playables[factionKey] = 0;
-
-			playables[factionKey] = playables[factionKey] + 1;
-			int playerId = m_playableManager.GetPlayerByPlayable(playable.GetRplId());
-			if (playerId > 0)
-				players[factionKey] = players[factionKey] + 1;
-		}
-		if (currentFaction != "")
-			players[currentFaction] = players[currentFaction] - 1;
-
-		float maxFaction = 0;
-		foreach (FactionKey factionKey, int count : playables)
-			if (maxFaction < count)
-				maxFaction = count;
-
-		// Scale
-		int minFaction = 999;
-		foreach (FactionKey factionKey, int count : players)
-		{
-			int scaledCount = players[factionKey] * (maxFaction / playables[factionKey]);
-			if (minFaction > scaledCount)
-				minFaction = scaledCount;
-		}
-
-		int currentCount = players[factionKeyPlayer];
-		int diff = currentCount - minFaction;
-
-		return diff <= m_iFactionsBalance;
+		map<FactionKey, int> targetRatioPerFaction;
+	
+		if (!GetTargetRatioPerFaction(targetRatioPerFaction))
+			return true;
+	
+		if (!targetRatioPerFaction.Contains(factionKeyPlayer))
+			return false;
+	
+		int targetCount = targetRatioPerFaction.Get(factionKeyPlayer);
+		int currentCount = GetCurrentPlayerCountForFaction(factionKeyPlayer);
+	
+		if (currentCount >= targetCount)
+			return false;
+	
+		return true;
 	}
 
 	// ------------------------------------------ Actions ------------------------------------------
@@ -886,6 +1001,65 @@ class PS_GameModeCoop : SCR_BaseGameMode
 				break;
 		}
 	}
+	
+	protected bool m_bAllSlotsLocked = false;
+	void ToggleAllLock()
+	{
+		if(GetState() != SCR_EGameModeState.SLOTSELECTION)
+			return;
+		
+		int lockId = -1;
+		if(!m_bAllSlotsLocked)
+			lockId = -2;
+
+		if(m_bAllSlotsLocked)
+			Rpc(PlaySoundUnlock);
+		
+		PS_PlayableManager playableManager = PS_PlayableManager.GetInstance();
+		foreach (RplId playableId, PS_PlayableContainer playable : m_playableManager.m_aPlayablesSorted)
+		{
+			playableManager.SetPlayablePlayer(playable.GetRplId(), lockId);
+		}
+
+		m_bAllSlotsLocked = !m_bAllSlotsLocked;
+		Rpc(RPC_SetToggleAllLock, m_bAllSlotsLocked);
+		UpdateCoopLobbyButtons();
+	}
+	
+	[RplRpc(RplChannel.Reliable, RplRcver.Broadcast)]
+	void RPC_SetToggleAllLock(bool state)
+	{
+		m_bAllSlotsLocked = state;
+		
+		UpdateCoopLobbyButtons();
+	}
+	
+	protected bool m_bRatioForced = false;
+	void ToggleRatio()
+	{
+		m_bRatioForced = !m_bRatioForced;
+		Rpc(RPC_SetToggleRatio, m_bRatioForced);
+		UpdateCoopLobbyButtons();
+	}
+	
+	[RplRpc(RplChannel.Reliable, RplRcver.Broadcast)]
+	void RPC_SetToggleRatio(bool state)
+	{
+		m_bRatioForced = state;
+		
+		UpdateCoopLobbyButtons();
+	}
+	
+	[RplRpc(RplChannel.Reliable, RplRcver.Broadcast)]
+	void PlaySoundUnlock(){
+		ResourceName sound = "{E3E34E1B0BC94432}Sounds/UI/Samples/Menu/UI_Task_Succeded.wav";
+		AudioSystem.PlaySound(sound);
+	}
+	
+	bool GetToggleAllLock()
+	{
+		return m_bAllSlotsLocked;
+	}
 
 	// Switch to next game state
 	void AdvanceGameState(SCR_EGameModeState oldState)
@@ -901,6 +1075,10 @@ class PS_GameModeCoop : SCR_BaseGameMode
 		{
 			case SCR_EGameModeState.PREGAME:
 				SetGameModeState(SCR_EGameModeState.SLOTSELECTION);
+			
+				if(m_bStartAllSlotsLocked)
+					ToggleAllLock();
+
 				break;
 			case SCR_EGameModeState.SLOTSELECTION:
 				if (m_bShowCutscene)
@@ -1074,6 +1252,11 @@ class PS_GameModeCoop : SCR_BaseGameMode
 	bool IsNotificationsDisabled()
 	{
 		return m_bDisableNotifications;
+	}	
+	
+	bool IsEnforceRatioEnabled()
+	{
+		return m_bRatioForced;
 	}
 
 	bool IsFactionLockMode()
@@ -1162,6 +1345,29 @@ class PS_GameModeCoop : SCR_BaseGameMode
 		m_iFreezeTime = freezeTime;
 	}
 	
+	PS_CoopLobby UpdateCoopLobbyButtons()
+	{
+		MenuManager menuManager = GetGame().GetMenuManager();
+		if (!menuManager)
+			return null;
+	
+		MenuBase menu = menuManager.FindMenuByPreset(ChimeraMenuPreset.CoopLobby);
+		if (!menu)
+			return null;
+	
+		if (!menu.IsOpen())
+			return null;
+
+		PS_CoopLobby coopLobby = PS_CoopLobby.Cast(menu);
+		if(coopLobby)
+		{
+			coopLobby.UpdateButtons();
+			coopLobby.UpdateRatio()
+		}
+
+		return coopLobby;
+	}
+	
 	int GetDisableTime()
 	{
 		return m_iDisableTime;
@@ -1228,6 +1434,8 @@ class PS_GameModeCoop : SCR_BaseGameMode
 		writer.WriteBool(m_bFactionLock);
 		writer.WriteInt(m_iFreezeTime);
 		writer.WriteInt(m_iReconnectTime);
+		writer.WriteBool(m_bAllSlotsLocked);
+		writer.WriteBool(m_bRatioForced);
 
 		return true;
 	}
@@ -1237,6 +1445,8 @@ class PS_GameModeCoop : SCR_BaseGameMode
 		reader.ReadBool(m_bFactionLock);
 		reader.ReadInt(m_iFreezeTime);
 		reader.ReadInt(m_iReconnectTime);
+		reader.ReadBool(m_bAllSlotsLocked);
+		reader.ReadBool(m_bRatioForced);
 
 		return true;
 	}

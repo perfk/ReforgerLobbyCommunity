@@ -453,6 +453,7 @@ class PS_CharacterSelector : SCR_ButtonComponent
 		}
 	
 		SCR_EGameModeState gameState = m_GameModeCoop.GetState();
+		
 		if (!PS_PlayersHelper.IsAdminOrServer())
 		{
 			RplId playableId = m_PlayableManager.GetPlayableByPlayer(m_iCurrentPlayerId);
@@ -471,6 +472,7 @@ class PS_CharacterSelector : SCR_ButtonComponent
 				ChatCommandInvoker invoker = chatPanelManager.GetCommandInvoker("lmsg");
 				invoker.Invoke(null, "Где баланс?");
 				m_CoopLobby.SetPreviewPlayable(m_iPlayableId, true);
+				AudioSystem.PlaySound("{8BD49C1587312522}Sounds/UI/Samples/Menu/UI_Task_Canceled.wav");
 				return;
 			}
 			

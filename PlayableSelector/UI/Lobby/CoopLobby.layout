@@ -186,6 +186,64 @@ FrameWidgetClass {
                 Font "{3E7733BAC8C831F6}UI/Fonts/RobotoCondensed/RobotoCondensed_Regular.fnt"
                }
               }
+              ButtonWidgetClass "{695D5A329F81A702}" {
+               Name "ToggleRatio"
+               Slot OverlayWidgetSlot "{695D24C49119851F}" {
+                HorizontalAlign 2
+                Padding 0 28 80 0
+               }
+               "Is Enabled" 0
+               "Is Visible" 0
+               Color 0 0 0 1
+               components {
+                SCR_InputButtonComponent "{695D24C5EBB3D8E5}" {
+                 m_sActionName ""
+                 m_sLabel ""
+                 m_iHeightInPixel 48
+                 m_fHoldIndicatorHoldPosition 3
+                }
+               }
+               {
+                ImageWidgetClass "{695D5A329F81A704}" {
+                 Name "ToggleRatioImage"
+                 Slot ButtonWidgetSlot "{695D24C61AC4A202}" {
+                 }
+                 Clipping Ancestor
+                 Texture "{2EFEA2AF1F38E7F0}UI/Textures/Icons/icons_wrapperUI-64.imageset"
+                 Image "lawsOfWar"
+                 Size 40 40
+                }
+               }
+              }
+              ButtonWidgetClass "{695D4496D1C9CE38}" {
+               Name "ToggleLockAll"
+               Slot OverlayWidgetSlot "{695D24C49119851F}" {
+                HorizontalAlign 2
+                Padding 0 28 20 0
+               }
+               "Is Enabled" 0
+               "Is Visible" 0
+               Color 0 0 0 1
+               components {
+                SCR_InputButtonComponent "{695D24C5EBB3D8E5}" {
+                 m_sActionName ""
+                 m_sLabel ""
+                 m_iHeightInPixel 48
+                 m_fHoldIndicatorHoldPosition 3
+                }
+               }
+               {
+                ImageWidgetClass "{695D4496D1C9CE3A}" {
+                 Name "ToggleLockAllImage"
+                 Slot ButtonWidgetSlot "{695D24C61AC4A202}" {
+                 }
+                 Clipping Ancestor
+                 Texture "{2EFEA2AF1F38E7F0}UI/Textures/Icons/icons_wrapperUI-64.imageset"
+                 Image "server-locked"
+                 Size 40 40
+                }
+               }
+              }
              }
             }
             OverlayWidgetClass "{5D6D141612AB1323}" {
@@ -909,24 +967,11 @@ FrameWidgetClass {
               TextWidgetClass "{5D6D1415C09A4317}" {
                Name "PlayersHeader"
                Slot OverlayWidgetSlot "{5D6F14918D6DE88A}" {
-                HorizontalAlign 2
-                Padding 0 28 132 0
+                HorizontalAlign 0
+                Padding 16 28 48 0
                }
                Clipping False
                Text "#PS-Lobby_Players"
-               "Font Size" 36
-               "Min Font Size" 36
-               "Horizontal Alignment" Center
-               "Vertical Alignment" Center
-              }
-              TextWidgetClass "{691B0C43C8497997}" {
-               Name "RatioHeader"
-               Slot OverlayWidgetSlot "{691B0C43C84979B5}" {
-                HorizontalAlign 0
-                Padding 8 28 0 0
-               }
-               Clipping False
-               Text "Ratio"
                "Font Size" 36
                "Min Font Size" 36
                "Horizontal Alignment" Center
@@ -938,14 +983,14 @@ FrameWidgetClass {
              Name "OverlayPlayersCounter"
              Slot FrameWidgetSlot "{60DD09FA60C60E28}" {
               Anchor 0 0 0 0
-              PositionX 365
-              OffsetLeft 365
-              PositionY 75
-              OffsetTop 75
-              SizeX 130
-              OffsetRight -495
-              SizeY 40
-              OffsetBottom -115
+              PositionX 393
+              OffsetLeft 393
+              PositionY 71
+              OffsetTop 71
+              SizeX 92
+              OffsetRight -485
+              SizeY 47
+              OffsetBottom -118
              }
              {
               PanelWidgetClass "{60DD09FA511FB2EA}" {
@@ -1058,48 +1103,6 @@ FrameWidgetClass {
                    }
                   }
                  }
-                }
-               }
-              }
-             }
-            }
-            OverlayWidgetClass "{691B0C448EB473DA}" {
-             Name "OverlayRatioCounter"
-             Slot FrameWidgetSlot "{60DD09FA60C60E28}" {
-              PositionX 90
-              OffsetLeft 90
-              PositionY 75
-              OffsetTop 75
-              SizeX 145
-              OffsetRight -235
-              SizeY 40
-              OffsetBottom -115
-             }
-             {
-              PanelWidgetClass "{691B0C448EB473DD}" {
-               Name "PanelRatioCounter"
-               Slot OverlayWidgetSlot "{60DB65C7C43AD196}" {
-                VerticalAlign 1
-               }
-               Color 0 0 0 0.25
-               style full
-               {
-                TextWidgetClass "{691B0C448EB4CAC4}" {
-                 Name "RatioCounter"
-                 Slot FrameWidgetSlot "{60DB5B8A9725A903}" {
-                  Anchor 0 0 0 0
-                  OffsetLeft 0
-                  OffsetTop 0
-                  OffsetRight -100
-                  OffsetBottom -30
-                  SizeToContent 1
-                 }
-                 Text ""
-                 "Font Size" 26
-                 "Min Font Size" 14
-                 "Horizontal Alignment" Center
-                 "Vertical Alignment" Center
-                 Wrap 1
                 }
                }
               }

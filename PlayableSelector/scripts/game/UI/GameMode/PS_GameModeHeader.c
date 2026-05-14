@@ -167,6 +167,19 @@ class PS_GameModeHeader : ScriptedWidgetComponent
 		return null;
 	}
 	
+	void Action_ToggleLock(SCR_ButtonBaseComponent button)
+	{
+		PlayerController playerController = GetGame().GetPlayerController();
+		PS_PlayableControllerComponent playableController = PS_PlayableControllerComponent.Cast(playerController.FindComponent(PS_PlayableControllerComponent));
+		
+		PlayerManager playerManager = GetGame().GetPlayerManager();
+		EPlayerRole playerRole = playerManager.GetPlayerRoles(playerController.GetPlayerId());
+		if (!PS_PlayersHelper.IsAdminOrServer()) 
+			return;
+		
+		playableController.ToggleLockAll();
+	}
+	
 	void Action_Advance(SCR_ButtonBaseComponent button)
 	{
 		PlayerController playerController = GetGame().GetPlayerController();

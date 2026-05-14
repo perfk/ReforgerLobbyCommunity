@@ -31,5 +31,12 @@ PS_GameModeCoop PS_GameMode_Lobby1 : "{9C2001FE7A2F2281}Prefabs/MP/Modes/PS_Game
   }
  }
 }
-HitRegistrationManager HitRegManager1 : "{0EDA3D48791120DD}Prefabs/MP/HitRegManager.et" {
+Vehicle Test1 : "{ECF122CCE41D8057}Prefabs/Characters/Test22.et" {
+ components {
+  GC_Marker "{695AE8D88678697A}" {
+   m_fRadiusChangePerUpdate 200
+   m_fMaxRadiusChangeMeters 750
+  }
+ }
+ coords 10159.16 2.468 1496.429
 }

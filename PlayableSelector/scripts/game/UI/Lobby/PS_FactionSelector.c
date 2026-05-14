@@ -15,6 +15,7 @@ class PS_FactionSelector : SCR_ButtonBaseComponent
 	protected int m_iCount;
 	protected int m_iMaxCount;
 	protected int m_iLockedCount;
+	protected int m_iRatioCount;
 	protected SCR_Faction m_faction;
 	protected PS_CoopLobby m_CoopLobby;
 	
@@ -75,6 +76,13 @@ class PS_FactionSelector : SCR_ButtonBaseComponent
 		m_iLockedCount = lockedCount;
 		
 		UpdateCounter();
+	}	
+	
+	void SetRatioCount(int ratioCount)
+	{
+		m_iRatioCount = ratioCount;
+		
+		UpdateCounter();
 	}
 	
 	void SetCoopLobby(PS_CoopLobby coopLobby)
@@ -95,16 +103,38 @@ class PS_FactionSelector : SCR_ButtonBaseComponent
 	int GetLockedCount()
 	{
 		return m_iLockedCount;
+	}	
+	
+	int GetRatioCount()
+	{
+		return m_iRatioCount;
 	}
 	
 	void UpdateCounter()
 	{
-		if (m_iMaxCount - m_iLockedCount == 0)
+		int availableSlots = m_iMaxCount - m_iLockedCount;
+	
+		if (availableSlots <= 0)
 		{
 			m_wFactionCounter.SetText("#PS_Lobby_Locked");
 			return;
 		}
-		m_wFactionCounter.SetText(m_iCount.ToString() + " / " + (m_iMaxCount - m_iLockedCount).ToString());
+	
+		int displayMax = availableSlots;
+		bool enforceRatio = false;
+	
+		if (m_GameModeCoop && m_GameModeCoop.IsEnforceRatioEnabled())
+		{
+			enforceRatio = true;
+			displayMax = Math.Min(m_iRatioCount, availableSlots);
+		}
+	
+		string counterText = m_iCount.ToString() + " / " + displayMax.ToString();
+	
+		if (enforceRatio)
+			counterText += " (" + availableSlots.ToString() + ")";
+	
+		m_wFactionCounter.SetText(counterText);
 	}
 	
 	Faction GetFaction()

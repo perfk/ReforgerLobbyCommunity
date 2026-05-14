@@ -64,6 +64,8 @@ class PS_CoopLobby : MenuBase
 	protected ButtonWidget m_wNavigationStart;
 	protected ButtonWidget m_wNavigationChat;
 	protected ButtonWidget m_wNavigationClose;
+	protected ButtonWidget m_wToggleAllLocks;
+	protected ButtonWidget m_wToggleRatio;
 	protected ScrollLayoutWidget m_wRolesScroll;
 	protected OverlayWidget m_wOverlayCounter;
 	protected TextWidget m_wTextCounter;
@@ -82,6 +84,8 @@ class PS_CoopLobby : MenuBase
 	protected SCR_InputButtonComponent m_NavigationStart;
 	protected SCR_InputButtonComponent m_NavigationChat;
 	protected SCR_InputButtonComponent m_NavigationClose;
+	protected SCR_InputButtonComponent m_ToggleAllLocks;
+	protected SCR_InputButtonComponent m_ToggleRatio;
 	protected PS_VoiceChatList m_VoiceChatList;
 	protected SCR_EditBoxComponent m_PlayersSearchBox;
 	protected SCR_ButtonBaseComponent m_RolesFoldButtonComponent;
@@ -140,6 +144,8 @@ class PS_CoopLobby : MenuBase
 		m_wRolesScroll = ScrollLayoutWidget.Cast(m_wRoot.FindAnyWidget("RolesScroll"));
 		m_wNavigationChat = ButtonWidget.Cast(m_wRoot.FindAnyWidget("NavigationChat"));
 		m_wNavigationClose = ButtonWidget.Cast(m_wRoot.FindAnyWidget("NavigationClose"));
+		m_wToggleAllLocks = ButtonWidget.Cast(m_wRoot.FindAnyWidget("ToggleLockAll"));
+		m_wToggleRatio = ButtonWidget.Cast(m_wRoot.FindAnyWidget("ToggleRatio"));
 		m_wOverlayCounter = OverlayWidget.Cast(m_wRoot.FindAnyWidget("OverlayCounter"));
 		m_wTextCounter = TextWidget.Cast(m_wRoot.FindAnyWidget("TextCounter"));
 		m_wScreenButton = ButtonWidget.Cast(m_wRoot.FindAnyWidget("ScreenButton"));
@@ -154,6 +160,8 @@ class PS_CoopLobby : MenuBase
 		m_VoiceSwitchButtonComponent = SCR_ButtonBaseComponent.Cast(m_wVoiceSwitch.FindHandler(SCR_ButtonBaseComponent));
 		m_NavigationChat = SCR_InputButtonComponent.Cast(m_wNavigationChat.FindHandler(SCR_InputButtonComponent));
 		m_NavigationClose = SCR_InputButtonComponent.Cast(m_wNavigationClose.FindHandler(SCR_InputButtonComponent));
+		m_ToggleAllLocks = SCR_InputButtonComponent.Cast(m_wToggleAllLocks.FindHandler(SCR_InputButtonComponent));
+		m_ToggleRatio = SCR_InputButtonComponent.Cast(m_wToggleRatio.FindHandler(SCR_InputButtonComponent));
 		m_LobbyLoadoutPreview = PS_LobbyLoadoutPreview.Cast(m_wMainLoadoutPreview.FindHandler(PS_LobbyLoadoutPreview));
 		m_PlayersList = PS_PlayersList.Cast(m_wPlayersBody.FindHandler(PS_PlayersList));
 		m_NavigationStart = SCR_InputButtonComponent.Cast(m_wNavigationStart.FindHandler(SCR_InputButtonComponent));
@@ -172,6 +180,9 @@ class PS_CoopLobby : MenuBase
 		m_NavigationStart.m_OnActivated.Insert(Action_Ready);
 		m_NavigationChat.m_OnActivated.Insert(Action_ChatOpen);
 		m_NavigationClose.m_OnActivated.Insert(Action_Exit);
+		m_NavigationClose.m_OnActivated.Insert(Action_Exit);
+		m_ToggleAllLocks.m_OnActivated.Insert(Action_ToggleAllLocks);
+		m_ToggleRatio.m_OnActivated.Insert(Action_ToggleRatio);
 		m_RolesFoldButtonComponent.m_OnClicked.Insert(OnClickedRolesFold);
 		
 		// Events
@@ -195,6 +206,8 @@ class PS_CoopLobby : MenuBase
 		}
 		
 		m_LobbyLoadoutPreview.SetItemInfoWidget(m_wLobbyLittleInventoryItemInfo);
+		
+		UpdateButtons();
 		
 		// Init
 		Init();
@@ -237,7 +250,7 @@ class PS_CoopLobby : MenuBase
 	{
 		InitPlayables();
 		InitPlayers();
-		SetRatio();
+		UpdateRatio();
 		
 		m_wPlayersCounter.SetTextFormat("%1/%2", m_PlayerManager.GetPlayerCount(), m_PlayableManager.GetMaxPlayers());
 	}
@@ -357,6 +370,7 @@ class PS_CoopLobby : MenuBase
 		factionSelector.SetCount(count + added);
 		factionSelector.SetMaxCount(maxCount + addedMax);
 		factionSelector.SetLockedCount(lockedCount + addedLocked);
+		
 		if ((maxCount + addedMax) < 1)
 		{
 			factionSelector.GetRootWidget().RemoveFromHierarchy();
@@ -534,17 +548,16 @@ class PS_CoopLobby : MenuBase
 		m_VoiceChatList.SwitchFaction(factionKey);
 	}
 	
-	
 	void OnPlayerConnected(int playerId)
 	{
 		m_wPlayersCounter.SetTextFormat("%1/%2", m_PlayerManager.GetPlayerCount(), m_PlayableManager.GetMaxPlayers());
-		SetRatio();
+		UpdateRatio();
 	}
 	
 	void OnPlayerDisconnected(int playerId)
 	{
 		m_wPlayersCounter.SetTextFormat("%1/%2", m_PlayerManager.GetPlayerCount(), m_PlayableManager.GetMaxPlayers());
-		SetRatio();
+		UpdateRatio();
 	}
 	
 	void OnStartTimerCounterChanged(int timer)
@@ -590,6 +603,16 @@ class PS_CoopLobby : MenuBase
 		RplId playableId = m_PlayableManager.GetPlayableByPlayer(m_iPlayerId);
 		if (currentState != PS_EPlayableControllerState.Ready && playableId != RplId.Invalid()) m_PlayableControllerComponent.SetPlayerState(m_iPlayerId, PS_EPlayableControllerState.Ready);
 		if (currentState == PS_EPlayableControllerState.Ready) m_PlayableControllerComponent.SetPlayerState(m_iPlayerId, PS_EPlayableControllerState.NotReady);
+	}
+	
+	void Action_ToggleAllLocks()
+	{
+		m_PlayableControllerComponent.ToggleLockAll();
+	}
+	
+	void Action_ToggleRatio()
+	{
+		m_PlayableControllerComponent.ToggleRatio();
 	}
 	
 	// Direct
@@ -642,61 +665,71 @@ class PS_CoopLobby : MenuBase
 		ArmaReforgerScripted.OpenPauseMenu();
 	}
 	
-	protected void SetRatio()
+	void UpdateRatio()
 	{
-		int totalPlayers = m_PlayerManager.GetPlayerCount();
-		array<int> playersPerRatio = {};
+		map<FactionKey, int> targetRatioPerFaction;
 	
-		if (m_mFactions.Count() < 2)
-		{
-			TextWidget ratioHeader = TextWidget.Cast(m_wRoot.FindAnyWidget("RatioHeader"));
-			ratioHeader.SetVisible(false);
+		if (!m_GameModeCoop.GetTargetRatioPerFaction(targetRatioPerFaction))
 			return;
-		}
-		
-		int totalSlots = 0;
+	
 		foreach (SCR_Faction faction, PS_FactionSelector selector : m_mFactions)
 		{
-			totalSlots += selector.GetMaxCount();
-		}
-		
-		array<float> ratios = {};
-		foreach (SCR_Faction faction, PS_FactionSelector selector : m_mFactions)
-		{
-			float ratio = selector.GetMaxCount() / totalSlots;
-			ratios.Insert(ratio);
-		}
-
-		int remainingPlayers = totalPlayers;
-		for (int i = 0; i < ratios.Count(); i++)
-		{
-			int playersForThisRatio = Math.Round(ratios[i] * totalPlayers);
-			playersPerRatio.Insert(playersForThisRatio);
-			
-			remainingPlayers -= playersForThisRatio;
-		}
-		
-		if (remainingPlayers > 0)
-		{
-			int maxIndex = 0;
-			for (int i = 1; i < playersPerRatio.Count(); i++)
+			if (!faction || !selector)
+				continue;
+	
+			FactionKey factionKey = faction.GetFactionKey();
+	
+			if (!targetRatioPerFaction.Contains(factionKey))
 			{
-				if (ratios[i] > ratios[maxIndex])
-					maxIndex = i;
+				selector.SetRatioCount(0);
+				continue;
 			}
-			playersPerRatio[maxIndex] = playersPerRatio[maxIndex] + remainingPlayers;
+	
+			int targetCount = targetRatioPerFaction.Get(factionKey);
+			selector.SetRatioCount(targetCount);
 		}
-		
-		string formattedRatio = "";
-		for (int i = 0; i < playersPerRatio.Count(); i++)
+	}
+	
+	void UpdateButtons()
+	{	
+		if(PS_PlayersHelper.IsAdminOrServer())
 		{
-			formattedRatio += playersPerRatio[i].ToString();
+			m_wToggleAllLocks.SetVisible(true);
+			m_wToggleAllLocks.SetEnabled(true);
+			
+			m_wToggleRatio.SetVisible(true);
+			m_wToggleRatio.SetEnabled(true);
+		}
+		else
+		{
+			m_wToggleAllLocks.SetVisible(false);
+			m_wToggleAllLocks.SetEnabled(false);
+			
+			m_wToggleRatio.SetVisible(false);
+			m_wToggleRatio.SetEnabled(false);
+		}
 
-			if (i < playersPerRatio.Count() - 1)
-				formattedRatio += " : ";
+		if(m_GameModeCoop.GetToggleAllLock())
+		{
+			ImageWidget lock = ImageWidget.Cast(m_wToggleAllLocks.FindAnyWidget("ToggleLockAllImage"));
+			lock.LoadImageFromSet(0, "{2EFEA2AF1F38E7F0}UI/Textures/Icons/icons_wrapperUI-64.imageset", "server-locked");
+		}
+		else
+		{
+			ImageWidget lock = ImageWidget.Cast(m_wToggleAllLocks.FindAnyWidget("ToggleLockAllImage"));
+			lock.LoadImageFromSet(0, "{2EFEA2AF1F38E7F0}UI/Textures/Icons/icons_wrapperUI-64.imageset", "server-unlocked");
 		}
 		
-		m_wRatioCounter.SetText(formattedRatio);
+		if(m_GameModeCoop.IsEnforceRatioEnabled())
+		{
+			ImageWidget ratio = ImageWidget.Cast(m_wToggleRatio.FindAnyWidget("ToggleRatioImage"));
+			ratio.SetColor(Color.White);
+		}
+		else
+		{
+			ImageWidget ratio = ImageWidget.Cast(m_wToggleRatio.FindAnyWidget("ToggleRatioImage"));
+			ratio.SetColor(Color.Red);
+		}
 	}
 }
 

@@ -108,7 +108,42 @@ class PS_PlayableControllerComponent : ScriptComponent
 				break;
 		}
 	}
-
+	
+	void ToggleLockAll()
+	{
+		Rpc(RPC_ToggleLockAll);
+	}
+	[RplRpc(RplChannel.Reliable, RplRcver.Server)]
+	void RPC_ToggleLockAll()
+	{
+		// only admins can change faction lock
+		PlayerManager playerManager = GetGame().GetPlayerManager();
+		PlayerController thisPlayerController = PlayerController.Cast(GetOwner());
+		EPlayerRole playerRole = playerManager.GetPlayerRoles(thisPlayerController.GetPlayerId());
+		if (playerRole == EPlayerRole.NONE)
+			return;
+		
+		PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		gameMode.ToggleAllLock();
+	}
+	
+	void ToggleRatio()
+	{
+		Rpc(RPC_ToggleRatio);
+	}
+	[RplRpc(RplChannel.Reliable, RplRcver.Server)]
+	void RPC_ToggleRatio()
+	{
+		PlayerManager playerManager = GetGame().GetPlayerManager();
+		PlayerController thisPlayerController = PlayerController.Cast(GetOwner());
+		EPlayerRole playerRole = playerManager.GetPlayerRoles(thisPlayerController.GetPlayerId());
+		if (playerRole == EPlayerRole.NONE)
+			return;
+		
+		PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		gameMode.ToggleRatio();
+	}
+	
 	void AdvanceGameState(SCR_EGameModeState state)
 	{
 		Rpc(RPC_AdvanceGameState, state);
