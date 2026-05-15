@@ -1018,6 +1018,10 @@ class PS_GameModeCoop : SCR_BaseGameMode
 		PS_PlayableManager playableManager = PS_PlayableManager.GetInstance();
 		foreach (RplId playableId, PS_PlayableContainer playable : m_playableManager.m_aPlayablesSorted)
 		{
+			int currentPlayerId = playableManager.GetPlayerByPlayable(playable.GetRplId());
+			if(currentPlayerId != -1 && currentPlayerId != -2)
+				continue;
+			
 			playableManager.SetPlayablePlayer(playable.GetRplId(), lockId);
 		}
 
