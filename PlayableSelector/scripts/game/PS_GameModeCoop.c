@@ -135,9 +135,6 @@ class PS_GameModeCoop : SCR_BaseGameMode
         World world = GetGame().GetWorld();
         world.FindSystem(SCR_GarbageSystem).Enable(!m_bDisableGarbageSystem);
 		
-		if(m_bEnforceRatio)
-			ToggleRatio();
-		
 		SetTimeAdvancing(false);
     }
 	
@@ -654,6 +651,38 @@ class PS_GameModeCoop : SCR_BaseGameMode
 		}
 	}
 	
+	int GetPlayableFactionCount()
+	{
+		if (!m_playableManager)
+			return 0;
+	
+		array<PS_PlayableContainer> playables = m_playableManager.GetPlayablesSorted();
+	
+		if (!playables || playables.IsEmpty())
+			return 0;
+	
+		array<FactionKey> factionKeys = {};
+	
+		foreach (PS_PlayableContainer playable : playables)
+		{
+			if (!playable)
+				continue;
+	
+			SCR_Faction faction = playable.GetFaction();
+			if (!faction)
+				continue;
+	
+			FactionKey factionKey = faction.GetFactionKey();
+	
+			if (factionKeys.Contains(factionKey))
+				continue;
+	
+			factionKeys.Insert(factionKey);
+		}
+	
+		return factionKeys.Count();
+	}
+	
 	bool GetTargetRatioPerFaction(out map<FactionKey, int> targetRatioPerFaction)
 	{
 		targetRatioPerFaction = new map<FactionKey, int>();
@@ -796,6 +825,9 @@ class PS_GameModeCoop : SCR_BaseGameMode
 		map<FactionKey, int> targetRatioPerFaction;
 	
 		if (!GetTargetRatioPerFaction(targetRatioPerFaction))
+			return true;
+		
+		if(targetRatioPerFaction.Count() <= 1)
 			return true;
 	
 		if (!targetRatioPerFaction.Contains(factionKeyPlayer))
@@ -1041,6 +1073,9 @@ class PS_GameModeCoop : SCR_BaseGameMode
 	protected bool m_bRatioForced = false;
 	void ToggleRatio()
 	{
+		if(GetPlayableFactionCount() <= 1)
+			return;
+		
 		m_bRatioForced = !m_bRatioForced;
 		Rpc(RPC_SetToggleRatio, m_bRatioForced);
 		UpdateCoopLobbyButtons();
@@ -1082,6 +1117,9 @@ class PS_GameModeCoop : SCR_BaseGameMode
 			
 				if(m_bStartAllSlotsLocked)
 					ToggleAllLock();
+			
+				if(m_bEnforceRatio)
+					ToggleRatio();
 
 				break;
 			case SCR_EGameModeState.SLOTSELECTION:
