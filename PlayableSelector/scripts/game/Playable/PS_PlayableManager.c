@@ -1108,7 +1108,7 @@ class PS_PlayableManager : ScriptComponent
 		for (int i = 0; i < m_aPlayables.Count(); i++)
 		{
 			PS_PlayableContainer playable = m_aPlayables.GetElement(i);
-			if (GetPlayerByPlayable(playable.GetRplId()) == -2 || (GetPlayerByPlayable(playable.GetRplId()) <= 0 && m_GameModeCoop.GetRemoveRedundantUnits()))
+			if ( ( GetPlayerByPlayable(playable.GetRplId()) == -2 && m_GameModeCoop.m_bRemoveLockedUnits ) || ( GetPlayerByPlayable(playable.GetRplId()) <= 0 && m_GameModeCoop.GetRemoveRedundantUnits()) )
 			{
 				SCR_ChimeraCharacter character = SCR_ChimeraCharacter.Cast(playable.GetPlayableComponent().GetOwner());
 				if (character)

@@ -29,8 +29,11 @@ class PS_GameModeCoop : SCR_BaseGameMode
 	[Attribute("0", UIWidgets.CheckBox, "Instead of just the leaders, every member is moved to their factions HQ room for a common briefing.\nMoving back to group channel is still possible.", category: "Reforger Lobby")]
 	bool m_bPublicCommandBriefing;
 
-	[Attribute("0", uiwidget: UIWidgets.CheckBox, "Remove units not occupied by players.", category: "Reforger Lobby")]
+	[Attribute("0", uiwidget: UIWidgets.CheckBox, "On game start, remove units not occupied by players.", category: "Reforger Lobby")]
 	protected bool m_bRemoveRedundantUnits;
+	
+	[Attribute("1", uiwidget: UIWidgets.CheckBox, "On game start, remove slots that were locked.", category: "Reforger Lobby")]
+	bool m_bRemoveLockedUnits;
 
 	[Attribute("0", uiwidget: UIWidgets.CheckBox, "Remove default markers on squad leaders.", category: "Reforger Lobby")]
 	protected bool m_bRemoveSquadMarkers;
