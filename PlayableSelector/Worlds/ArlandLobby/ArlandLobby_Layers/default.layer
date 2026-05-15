@@ -390,6 +390,7 @@ PS_GameModeCoop PS_GameMode_Lobby1 : "{9C2001FE7A2F2281}Prefabs/MP/Modes/PS_Game
   }
  }
  m_bTeamSwitch 1
+ m_bRemoveLockedUnits 0
  m_iFreezeTime 5
  m_bDisableChat 1
  m_bStartAllSlotsLocked 1
