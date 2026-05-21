@@ -55,7 +55,7 @@ class PS_BriefingMapMenu: ChimeraMenuBase
 		m_hMissionDescription = PS_MissionDescriptionUI.Cast(m_wGameModeHeader.FindHandler(PS_MissionDescriptionUI));
 		
 		m_wSteps = GetRootWidget().FindAnyWidget("StepsFrame");
-		PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		PS_GameModeCoop gameMode = PS_GameModeCoop.GetInstance();
 		//m_wSteps.SetVisible(gameMode.GetState() == SCR_EGameModeState.BRIEFING);
 		
 		PlayerController playerController = GetGame().GetPlayerController();

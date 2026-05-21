@@ -64,7 +64,7 @@ class PS_RolesGroup : SCR_ScriptedWidgetComponent
 			return;
 		
 		// Cache global
-		m_GameModeCoop = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		m_GameModeCoop = PS_GameModeCoop.GetInstance();
 		m_PlayableManager = PS_PlayableManager.GetInstance();
 		m_wWorkspaceWidget = GetGame().GetWorkspace();
 		m_PlayerController = GetGame().GetPlayerController();

@@ -28,7 +28,7 @@ modded class SCR_ChatPanel : ScriptedWidgetComponent
 		if (!playerController)
 			return true;
 
-		PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		PS_GameModeCoop gameMode = PS_GameModeCoop.GetInstance();
 		if (!gameMode)
 			return true;
 

@@ -110,7 +110,7 @@ class PS_CoopLobby : MenuBase
 		
 		// Cache global
 		m_InputManager = GetGame().GetInputManager();
-		m_GameModeCoop = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		m_GameModeCoop = PS_GameModeCoop.GetInstance();
 		m_PlayableManager = PS_PlayableManager.GetInstance();
 		m_PlayerManager = GetGame().GetPlayerManager();
 		m_PlayerController = GetGame().GetPlayerController();

@@ -143,7 +143,7 @@ class PS_SpectatorMenu: MenuBase
 			Close();
 			return;
 		}
-		m_GameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		m_GameMode = PS_GameModeCoop.GetInstance();
 		m_PlayableManager = PS_PlayableManager.GetInstance();
 		PlayerController playerController = GetGame().GetPlayerController();
 		playableController = PS_PlayableControllerComponent.Cast(playerController.FindComponent(PS_PlayableControllerComponent));

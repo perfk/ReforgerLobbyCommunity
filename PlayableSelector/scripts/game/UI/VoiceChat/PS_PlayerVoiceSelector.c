@@ -177,7 +177,7 @@ class PS_PlayerVoiceSelector : SCR_ButtonComponent
 		{
 			contextMenu.ActionPlayerSelect(m_iPlayerId);
 			
-			PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+			PS_GameModeCoop gameMode = PS_GameModeCoop.GetInstance();
 			RplId playableId = playableManager.GetPlayableByPlayerRemembered(m_iPlayerId);
 			if (playableId != RplId.Invalid() && gameMode.GetState() == SCR_EGameModeState.GAME)
 			{

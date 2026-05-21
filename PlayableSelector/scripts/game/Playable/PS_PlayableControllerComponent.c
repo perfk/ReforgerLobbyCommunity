@@ -123,7 +123,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 		if (playerRole == EPlayerRole.NONE)
 			return;
 		
-		PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		PS_GameModeCoop gameMode = PS_GameModeCoop.GetInstance();
 		gameMode.ToggleAllLock();
 	}
 	
@@ -140,7 +140,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 		if (playerRole == EPlayerRole.NONE)
 			return;
 		
-		PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		PS_GameModeCoop gameMode = PS_GameModeCoop.GetInstance();
 		gameMode.ToggleRatio();
 	}
 	
@@ -151,7 +151,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 	[RplRpc(RplChannel.Reliable, RplRcver.Server)]
 	void RPC_AdvanceGameState(SCR_EGameModeState state)
 	{
-		PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		PS_GameModeCoop gameMode = PS_GameModeCoop.GetInstance();
 		gameMode.AdvanceGameState(state);
 	}
 
@@ -182,7 +182,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 		if (playerRole == EPlayerRole.NONE)
 			return;
 
-		PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		PS_GameModeCoop gameMode = PS_GameModeCoop.GetInstance();
 		gameMode.FactionLockSwitch();
 	}
 
@@ -194,7 +194,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 	[RplRpc(RplChannel.Reliable, RplRcver.Server)]
 	void RPC_FreezeTimerAdvance(int time)
 	{
-		PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		PS_GameModeCoop gameMode = PS_GameModeCoop.GetInstance();
 		if (gameMode)
 			gameMode.FreezeTimerAdvance(time);
 	}
@@ -205,7 +205,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 	[RplRpc(RplChannel.Reliable, RplRcver.Server)]
 	void RPC_FreezeTimerEnd()
 	{
-		PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		PS_GameModeCoop gameMode = PS_GameModeCoop.GetInstance();
 		if (gameMode)
 			gameMode.FreezeTimerEnd();
 	}
@@ -416,7 +416,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 		SCR_PlayerController playerController = SCR_PlayerController.Cast(PlayerController.Cast(GetOwner()));
 		playerController.m_OnControlledEntityChanged.Insert(OnControlledEntityChanged);
 		
-		PS_GameModeCoop gameModeCoop = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		PS_GameModeCoop gameModeCoop = PS_GameModeCoop.GetInstance();
 		if (!gameModeCoop)
 			return;
 
@@ -466,7 +466,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 			vonTo = PS_LobbyVoNComponent.Cast(to.FindComponent(PS_LobbyVoNComponent));
 		if (!vonTo)
 		{
-			PS_GameModeCoop gameModeCoop = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+			PS_GameModeCoop gameModeCoop = PS_GameModeCoop.GetInstance();
 			if (gameModeCoop.GetState() == SCR_EGameModeState.GAME)
 				GetGame().GetCallqueue().Call(TellFuckingEditorCoreThanWeAlive, thisPlayerController.GetPlayerId(), to);
 		}
@@ -485,7 +485,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 	// There is sure no ебанорго game modes without spawns, yeah sure блять
 	void TellFuckingEditorCoreThanWeAlive(int playerId, IEntity entity)
 	{
-		PS_GameModeCoop gameModeCoop = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		PS_GameModeCoop gameModeCoop = PS_GameModeCoop.GetInstance();
 		if (gameModeCoop.IsFreezeTimeEnd() && gameModeCoop.GetDisableBuildingModeAfterFreezeTime())
 			 return;
 		SCR_BaseGameMode.Cast(GetGame().GetGameMode()).GetOnPlayerSpawned().Invoke(playerId, entity);
@@ -500,7 +500,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 	
 	override protected void EOnFrame(IEntity owner, float timeSlice)
 	{
-		PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		PS_GameModeCoop gameMode = PS_GameModeCoop.GetInstance();
 		if ((gameMode.GetState() == SCR_EGameModeState.GAME && gameMode.IsFreezeTimeEnd()) || !gameMode.IsFreezeTimeShootingForbiden())
 		{
 			ClearEventMask(GetOwner(), EntityEvent.FRAME);
@@ -669,6 +669,9 @@ class PS_PlayableControllerComponent : ScriptComponent
 		SCR_Faction faction = SCR_Faction.Cast(factionManager.GetFactionByKey(factionKey));
 		if(faction)
 			SetMap(faction.GetMapPrefab());
+		
+		PS_PlayableManager playableManager = PS_PlayableManager.GetInstance();
+		playableManager.SetPlayerFactionKey(playerId, factionKey);
 	}
 	
 	[RplRpc(RplChannel.Reliable, RplRcver.Server)]
@@ -682,7 +685,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 		EPlayerRole playerRole = playerManager.GetPlayerRoles(thisPlayerController.GetPlayerId());
 
 		// Check faction balance
-		PS_GameModeCoop gameModeCoop = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		PS_GameModeCoop gameModeCoop = PS_GameModeCoop.GetInstance();
 		if (!SCR_Global.IsAdmin(thisPlayerController.GetPlayerId()) && !gameModeCoop.CanJoinFaction(factionKey, playableManager.GetPlayerFactionKey(playerId)))
 			return;
 
@@ -905,7 +908,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 		
 		Rpc(RPC_AskRemoveFromGroup);
 
-		PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		PS_GameModeCoop gameMode = PS_GameModeCoop.GetInstance();
 		if (gameMode.GetFriendliesSpectatorOnly())
 			PS_ManualCameraSpectator.Cast(m_Camera).SetCharacterEntityMove(from);
 		
@@ -937,7 +940,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 		if (!SCR_Global.IsAdmin(thisPlayerController.GetPlayerId()))
 			return;
 
-		PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		PS_GameModeCoop gameMode = PS_GameModeCoop.GetInstance();
 		if (gameMode.GetState() == SCR_EGameModeState.PREGAME)
 			gameMode.StartGameMode();
 	}
@@ -969,7 +972,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 	{
 		PS_PlayableManager playableManager = PS_PlayableManager.GetInstance();
 		PlayerController playerController = PlayerController.Cast(GetOwner());
-		PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		PS_GameModeCoop gameMode = PS_GameModeCoop.GetInstance();
 		playableManager.ApplyPlayable(playerController.GetPlayerId());
 	}
 
@@ -1098,7 +1101,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 			return;
 
 		// Check faction balance
-		PS_GameModeCoop gameModeCoop = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		PS_GameModeCoop gameModeCoop = PS_GameModeCoop.GetInstance();
 		PS_PlayableContainer playableContainer = playableManager.GetPlayableById(playableId);
 		if (playableContainer)
 		{
@@ -1152,7 +1155,7 @@ class PS_PlayableControllerComponent : ScriptComponent
 		}
 
 		// Check faction balance
-		PS_GameModeCoop gameModeCoop = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		PS_GameModeCoop gameModeCoop = PS_GameModeCoop.GetInstance();
 		PS_PlayableContainer playableContainer = playableManager.GetPlayableById(playableId);
 		if (playableContainer)
 		{
@@ -1249,6 +1252,70 @@ class PS_PlayableControllerComponent : ScriptComponent
 	void RPC_SetCameraPosition(vector position)
 	{
 		m_Camera.SetOrigin(position);
+	}
+	
+	//bool CanJoinFaction(FactionKey factionKeyPlayer, FactionKey currentFaction)
+	void AskCanJoinSlot(int playerId, FactionKey toFaction, FactionKey currentFaction, RplId playableId, string callsign)
+	{
+		if(PS_PlayersHelper.IsAdminOrServer())
+		{
+			RPC_DoJoinSlot(playerId, toFaction, currentFaction, playableId, callsign);
+			return;
+		}
+
+		Rpc(RPC_AskCanJoinSlot, playerId, toFaction, currentFaction, playableId, callsign);
+	}
+	
+	[RplRpc(RplChannel.Reliable, RplRcver.Server)]
+	void RPC_AskCanJoinSlot(int playerId, FactionKey toFaction, FactionKey currentFaction, RplId playableId, string callsign)
+	{
+		PS_GameModeCoop gamemode = PS_GameModeCoop.GetInstance();
+		
+		bool canJoin = gamemode.CanJoinFaction(toFaction, currentFaction);
+		
+		if(canJoin)
+		{
+			Rpc(RPC_DoJoinSlot, playerId, toFaction, currentFaction, playableId, callsign);
+			//RPC_DoJoinSlot(playerId, toFaction, currentFaction, playableId, callsign);
+		}
+		else
+		{
+			Rpc(RPC_SlotFailed);
+			//RPC_SlotFailed();
+		}
+		
+		PS_PlayableManager playableManager = PS_PlayableManager.GetInstance();
+		playableManager.SetPlayerPlayable(playerId, playableId);
+	}	
+	
+	[RplRpc(RplChannel.Reliable, RplRcver.Owner)]
+	void RPC_SlotFailed()
+	{
+		AudioSystem.PlaySound("{8BD49C1587312522}Sounds/UI/Samples/Menu/UI_Task_Canceled.wav");
+		
+		SCR_ChatPanelManager chatPanelManager = SCR_ChatPanelManager.GetInstance();
+		ChatCommandInvoker invoker = chatPanelManager.GetCommandInvoker("lmsg");
+		invoker.Invoke(null, "Faction at Ratio");
+	}
+	
+	[RplRpc(RplChannel.Reliable, RplRcver.Owner)]
+	void RPC_DoJoinSlot(int playerId, FactionKey toFaction, FactionKey currentFaction, RplId playableId, string callsign)
+	{
+		PS_GameModeCoop gamemode = PS_GameModeCoop.GetInstance();
+		SCR_EGameModeState gameState = gamemode.GetState();
+		
+		SCR_UISoundEntity.SoundEvent("SOUND_HUD_GADGET_SELECT");
+		if (gameState == SCR_EGameModeState.BRIEFING)
+		{
+		if (!gamemode.m_bPublicCommandBriefing)
+			MoveToVoNRoom(playerId, toFaction, callsign);
+		else
+			MoveToVoNRoom(playerId, toFaction, "#PS-VoNRoom_Command");
+		}
+		
+		ChangeFactionKey(playerId, toFaction);
+		SetPlayerState(playerId, PS_EPlayableControllerState.NotReady);	
+		SetPlayerPlayable(playerId, playableId);
 	}
 	
 	static PS_PlayableControllerComponent GetInstance()

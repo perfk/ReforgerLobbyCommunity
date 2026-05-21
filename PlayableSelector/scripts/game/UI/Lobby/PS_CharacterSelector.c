@@ -80,11 +80,12 @@ class PS_CharacterSelector : SCR_ButtonComponent
 		super.HandlerAttached(w);
 		
 		// Cache global
-		m_GameModeCoop = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		m_GameModeCoop = PS_GameModeCoop.GetInstance();
 		m_PlayableManager = PS_PlayableManager.GetInstance();
 		m_PlayerController = GetGame().GetPlayerController();
 		if (!m_PlayerController)
 			return;
+			Print("[PS_CharacterSelector.HandlerAttached] debug line (" + __FILE__ + " L" + __LINE__ + ")", LogLevel.WARNING);
 		m_iCurrentPlayerId = m_PlayerController.GetPlayerId();
 		m_FactionManager = SCR_FactionManager.Cast(GetGame().GetFactionManager());
 		m_PlayerManager = GetGame().GetPlayerManager();
@@ -470,24 +471,13 @@ class PS_CharacterSelector : SCR_ButtonComponent
 			{
 				SCR_ChatPanelManager chatPanelManager = SCR_ChatPanelManager.GetInstance();
 				ChatCommandInvoker invoker = chatPanelManager.GetCommandInvoker("lmsg");
-				invoker.Invoke(null, "Где баланс?");
+				invoker.Invoke(null, "Faction at Ratio");
 				m_CoopLobby.SetPreviewPlayable(m_iPlayableId, true);
 				AudioSystem.PlaySound("{8BD49C1587312522}Sounds/UI/Samples/Menu/UI_Task_Canceled.wav");
 				return;
 			}
 			
-			SCR_UISoundEntity.SoundEvent("SOUND_HUD_GADGET_SELECT");
-			if (gameState == SCR_EGameModeState.BRIEFING)
-			{
-				if (!m_GameModeCoop.m_bPublicCommandBriefing)
-					m_PlayableControllerComponent.MoveToVoNRoom(playerId, m_sFactionKey, m_sPlayableCallsign);
-				else
-					m_PlayableControllerComponent.MoveToVoNRoom(playerId, m_sFactionKey, "#PS-VoNRoom_Command");
-			}
-			
-			m_PlayableControllerComponent.ChangeFactionKey(playerId, m_sFactionKey);
-			m_PlayableControllerComponent.SetPlayerState(playerId, PS_EPlayableControllerState.NotReady);	
-			m_PlayableControllerComponent.SetPlayerPlayable(playerId, m_iPlayableId);
+			m_PlayableControllerComponent.AskCanJoinSlot(playerId, m_sFactionKey, m_PlayableManager.GetPlayerFactionKey(m_iCurrentPlayerId), m_iPlayableId, m_sPlayableCallsign);
 		} else {
 			SCR_UISoundEntity.SoundEvent("SOUND_HUD_GADGET_SELECT");
 			m_PlayableControllerComponent.ChangeFactionKey(playerId, "");
@@ -638,7 +628,7 @@ class PS_CharacterSelector : SCR_ButtonComponent
 	bool CanJoinFaction()
 	{
 		// Check faction balance
-		PS_GameModeCoop gameModeCoop = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		PS_GameModeCoop gameModeCoop = PS_GameModeCoop.GetInstance();
 		if (m_PlayableContainer)
 		{
 			if (!PS_PlayersHelper.IsAdminOrServer() && !gameModeCoop.CanJoinFaction(m_sFactionKey, m_PlayableManager.GetPlayerFactionKey(m_iCurrentPlayerId)))
@@ -646,6 +636,8 @@ class PS_CharacterSelector : SCR_ButtonComponent
 		}
 		return true;
 	}
+	
+	
 }
 
 

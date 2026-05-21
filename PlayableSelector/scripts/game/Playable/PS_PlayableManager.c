@@ -134,7 +134,7 @@ class PS_PlayableManager : ScriptComponent
 		OnStartTimerCounterChanged();
 		if (m_iStartTimerCounter == 0)
 		{
-			PS_GameModeCoop gameModeCoop = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+			PS_GameModeCoop gameModeCoop = PS_GameModeCoop.GetInstance();
 			gameModeCoop.AdvanceGameState(SCR_EGameModeState.SLOTSELECTION);
 			m_CallQueue.Remove(StartTime);
 		}

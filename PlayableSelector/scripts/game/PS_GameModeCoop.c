@@ -205,7 +205,7 @@ class PS_GameModeCoop : SCR_BaseGameMode
 	void ForceFramerate()
 	{
 		BaseContainer video = GetGame().GetEngineUserSettings().GetModule("VideoUserSettings");
-		if (PS_GameModeCoop.Cast(GetGame().GetGameMode()).GetState() == SCR_EGameModeState.GAME)
+		if (PS_GameModeCoop.GetInstance().GetState() == SCR_EGameModeState.GAME)
 		{
 			video.Set("MaxFps", m_iOldMenuFramerate);
 			GetGame().UserSettingsChanged();
@@ -1471,6 +1471,11 @@ class PS_GameModeCoop : SCR_BaseGameMode
 	void RPC_SetCanOpenLobbyInGame(bool canOpenLobbyInGame)
 	{
 		m_bTeamSwitch = canOpenLobbyInGame;
+	}
+	
+	static PS_GameModeCoop GetInstance()
+	{
+		return PS_GameModeCoop.Cast(GetGame().GetGameMode());
 	}
 
 	// ------------------------------------------ JIP Replication ------------------------------------------

@@ -22,7 +22,7 @@ class PS_WaitScreen: MenuBase
 	
 	void AwaitPlayerController()
 	{
-		PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		PS_GameModeCoop gameMode = PS_GameModeCoop.GetInstance();
 		if (!gameMode)
 		{
 			m_wInfoText.SetText("Awaiting gamemode entity.");

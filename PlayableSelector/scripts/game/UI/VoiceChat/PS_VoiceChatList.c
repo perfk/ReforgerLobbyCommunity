@@ -197,7 +197,7 @@ class PS_VoiceChatList : SCR_ScriptedWidgetComponent
 	void GetVisibleRooms(out array<int> outRoomsArray)
 	{
 		// global
-		PS_GameModeCoop gameMode = PS_GameModeCoop.Cast(GetGame().GetGameMode());
+		PS_GameModeCoop gameMode = PS_GameModeCoop.GetInstance();
 		PlayerManager playerManager = GetGame().GetPlayerManager();
 		PS_PlayableManager playableManager = PS_PlayableManager.GetInstance();
 		PS_VoNRoomsManager VoNRoomsManager = PS_VoNRoomsManager.GetInstance();
